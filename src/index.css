@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
-/* Fix para que el mapa de Leaflet tenga altura real */
-.leaflet-container {
-  width: 100%;
+/* Esto es para que el mapa ocupe el lugar correcto */
+html, body, #root {
   height: 100%;
-  min-height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-/* Ocultar las barras de scroll en los carruseles */
+/* Para que los locales de abajo se puedan scrollear sin ver la barra */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
