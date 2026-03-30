@@ -32,9 +32,20 @@ mongoose.connect(MONGO_URI)
 // 5. IMPORTAR Y USAR LAS RUTAS
 // Aquí conectamos el archivo que creaste en la carpeta 'routes'
 const productosRoutes = require('./routes/productos');
+const publicidadesRoutes = require('./routes/publicidades');
+const authRoutes = require('./routes/auth');
+
+// Rutas de autenticación
+app.use('/api/auth', authRoutes);
+
+// Rutas de autenticación
+app.use('/api/auth', authRoutes);
 
 // Todas las rutas de productos empezarán con /api/productos
 app.use('/api/productos', productosRoutes);
+
+// Todas las rutas de publicidades empezarán con /api/publicidades
+app.use('/api/publicidades', publicidadesRoutes);
 
 // 6. RUTA DE PRUEBA (Para saber si el servidor está vivo)
 app.get('/', (req, res) => {

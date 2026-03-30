@@ -10,6 +10,7 @@ const App = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [usuario, setUsuario] = useState(null);
   const [productos, setProductos] = useState([]);
+  const [publicidades, setPublicidades] = useState([]);
   const [mostrarModal, setMostrarModal] = useState(false);
   const [mostrarRegistro, setMostrarRegistro] = useState(false);
   const [coordsClic, setCoordsClic] = useState(null);
@@ -28,10 +29,17 @@ const App = () => {
   ];
 
   useEffect(() => {
+    // Cargar productos
     fetch('http://localhost:5000/api/productos?aprobado=true')
       .then(res => res.json())
       .then(data => setProductos(data))
-      .catch(err => console.error('Error backend:', err));
+      .catch(err => console.error('Error backend productos:', err));
+
+    // Cargar publicidades activas
+    fetch('http://localhost:5000/api/publicidades')
+      .then(res => res.json())
+      .then(data => setPublicidades(data))
+      .catch(err => console.error('Error backend publicidades:', err));
   }, []);
 
   const handleRegistro = ({ nombre, email, password, role }) => {
@@ -227,12 +235,35 @@ const App = () => {
       {/* FOOTER MARQUEE */}
       <footer className="footer-marquee">
         <div className="marquee-content">
-          {localesPublicitarios.map(local => (
-            <div key={`marquee-${local.id}`} className="marquee-item" onClick={() => centrarMapaEnLocal(local)}>
-              <img src={local.imagen} alt={local.nombre} />
-              <span>{local.nombre} - ¡Visítanos!</span>
-            </div>
-          ))}
+          {publicidades.length > 0 ? (
+            publicidades.map(pub => (
+              <div
+                key={`pub-${pub._id}`}
+                className="marquee-item"
+                onClick={() => {
+                  // Registrar click en publicidad
+                  fetch(`http://localhost:5000/api/publicidades/${pub._id}/click`, {
+                    method: 'PUT'
+                  }).catch(err => console.error('Error registrando click:', err));
+                }}
+              >
+                <span>{pub.texto}</span>
+              </div>
+            ))
+          ) : (
+            // Publicidades por defecto si no hay ninguna activa
+            <>
+              <div className="marquee-item">
+                <span>🔥 HELADERIA BALLESTER: 2x1 en 1/4kg todos los jueves 🍦</span>
+              </div>
+              <div className="marquee-item">
+                <span>🛠️ FERRETERIA MALAIPU: 15% OFF en herramientas</span>
+              </div>
+              <div className="marquee-item">
+                <span>📦 MarketPin: Tu mercado local en San Martín</span>
+              </div>
+            </>
+          )}
         </div>
       </footer>
 
