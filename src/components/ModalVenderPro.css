@@ -1,7 +1,48 @@
-/* Estilos para ModalVenderPro (placeholder) */
-.modal-vender-pro {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  padding: 1rem;
+.modal-mp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
 }
+
+.modal-mp-pro {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+  padding: 1.4rem;
+  width: min(93vw, 450px);
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: scaleIn 0.2s ease;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.96); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modal-mp-pro .form-input,
+.modal-mp-pro select,
+.modal-mp-pro .modal-actions button {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.modal-mp-pro .form-input,
+.modal-mp-pro select {
+  border: 1px solid #d1d5db;
+  margin: 8px 0;
+  padding: 10px;
+}
+
+.modal-mp-pro .modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.modal-mp-pro button { cursor: pointer; }
+

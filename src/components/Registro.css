@@ -1,3 +1,65 @@
+.registro-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.registro-modal {
+  width: min(95vw, 420px);
+  background: #ffffff;
+  color: #333;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  padding: 22px;
+  position: relative;
+  animation: scaleIn 0.2s ease;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.registro-form input,
+.registro-form select,
+.registro-form button {
+  width: 100%;
+  margin-bottom: 12px;
+  border-radius: 8px;
+}
+
+.registro-form input,
+.registro-form select {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #222;
+}
+
+.registro-form button {
+  padding: 10px; 
+  border: 0;
+  background: #0f6dff;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.registro-footer {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.registro-footer .link {
+  color: #0f6dff;
+  cursor: pointer;
+  font-size: 0.90rem;
+}
+
 .zara-form-box {
   width: 100%;
   max-width: 450px;
