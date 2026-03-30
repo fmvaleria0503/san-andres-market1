@@ -95,6 +95,19 @@ const App = () => {
     return matchesSearch && matchesCategoria && matchesCondicion;
   });
 
+  const topSellers = Array.from(
+    new Map(
+      productosFiltrados
+        .map(p => ({
+          nombre: p.vendedor?.nombre || 'Vendedor Anónimo',
+          estrellas: p.vendedor?.estrellas || 0,
+          productos: 1
+        }))
+        .sort((a, b) => b.estrellas - a.estrellas)
+        .map(item => [item.nombre, item])
+    ).values()
+  );
+
   const sellersConComentario = topSellers.slice(0, 3).map((s, idx) => ({
     ...s,
     comentario: [
