@@ -7,23 +7,77 @@ import logo from './assets/logo.png';
 import './App.css';
 
 const App = () => {
+  const [usuarios, setUsuarios] = useState([]);
+  const [usuario, setUsuario] = useState(null);
   const [productos, setProductos] = useState([]);
   const [mostrarModal, setMostrarModal] = useState(false);
   const [mostrarRegistro, setMostrarRegistro] = useState(false);
   const [coordsClic, setCoordsClic] = useState(null);
 
   useEffect(() => {
-    // Cargar productos aprobados desde el backend
-    fetch("http://localhost:5000/api/productos?aprobado=true")
+    fetch('http://localhost:5000/api/productos?aprobado=true')
       .then(res => res.json())
       .then(data => setProductos(data))
-      .catch(err => console.error("Error backend:", err));
+      .catch(err => console.error('Error backend:', err));
   }, []);
 
+  const handleRegistro = ({ nombre, email, password, role }) => {
+    if (usuarios.some(u => u.email === email)) {
+      alert('El email ya está registrado.');
+      return;
+    }
+    const nuevoUsuario = { id: Date.now(), nombre, email, password, role };
+    setUsuarios(prev => [...prev, nuevoUsuario]);
+    setUsuario(nuevoUsuario);
+    setMostrarRegistro(false);
+    alert('Usuario creado con éxito.');
+  };
+
+  const handleLogin = ({ email, password }) => {
+    const usuarioExistente = usuarios.find(u => u.email === email && u.password === password);
+    if (!usuarioExistente) {
+      alert('Credenciales incorrectas');
+      return;
+    }
+    setUsuario(usuarioExistente);
+    setMostrarRegistro(false);
+  };
+
+  const handleNewProduct = (nuevoProducto) => {
+    setProductos(prev => [nuevoProducto, ...prev]);
+    setMostrarModal(false);
+  };
+
   const abrirModalConClic = (coordenadas) => {
+    if (!usuario) {
+      alert('Debés ingresar o registrarte para ofertar productos.');
+      return;
+    }
     setCoordsClic(coordenadas);
     setMostrarModal(true);
   };
+
+  const topSellers = Array.from(
+    new Map(
+      productos
+        .map(p => ({
+          nombre: p.vendedor?.nombre || 'Vendedor Anónimo',
+          estrellas: p.vendedor?.estrellas || 0,
+          productos: 1
+        }))
+        .sort((a, b) => b.estrellas - a.estrellas)
+        .map(item => [item.nombre, item])
+    ).values()
+  );
+
+  const sellersConComentario = topSellers.slice(0, 3).map((s, idx) => ({
+    ...s,
+    comentario: [
+      'Muy buen servicio, me atendieron rápido.',
+      'Precio justo y producto en excelente estado.',
+      'Recomendado, volvería a comprar.'
+    ][idx] || 'Excelente vendedor.'
+  }));
 
   return (
     <div className="app-container">
@@ -35,9 +89,16 @@ const App = () => {
           <input type="text" placeholder="¿Qué buscás en San Martín? (ej: mesa, lavarropas...)" />
         </div>
         <div className="user-access">
-          <button className="btn-registro" onClick={() => setMostrarRegistro(true)}>
-            REGISTRO
-          </button>
+          {usuario ? (
+            <>
+              <span className="welcome-text">Hola, {usuario.nombre} ({usuario.role})</span>
+              <button className="btn-logout" onClick={() => setUsuario(null)}>SALIR</button>
+            </>
+          ) : (
+            <button className="btn-registro" onClick={() => setMostrarRegistro(true)}>
+              REGISTRO/INGRESO
+            </button>
+          )}
           <FiUser className="user-icon" />
         </div>
       </header>
@@ -49,15 +110,15 @@ const App = () => {
         <aside className="side-panel left-side">
           <h3>Vendedores Top ⭐</h3>
           <div className="sellers-list">
-            {[
-              { nom: "Ferretería Central", est: "⭐⭐⭐⭐⭐" },
-              { nom: "Almacén de Juan", est: "⭐⭐⭐⭐" }
-            ].map(v => (
-              <div key={v.nom} className="seller-card">
-                <span className="seller-name">{v.nom}</span>
-                <span className="seller-stars">{v.est}</span>
+            {sellersConComentario.length > 0 ? sellersConComentario.map(v => (
+              <div key={v.nombre} className="seller-card">
+                <span className="seller-name">{v.nombre}</span>
+                <span className="seller-stars">{'★'.repeat(Math.max(1, Math.min(5, Math.round(v.estrellas))))}</span>
+                <span className="seller-comment">“{v.comentario}”</span>
               </div>
-            ))}
+            )) : (
+              <div className="seller-card">Cargando vendedores...</div>
+            )}
           </div>
         </aside>
 
@@ -66,18 +127,34 @@ const App = () => {
           <MapaBarrio productos={productos} onMapClick={abrirModalConClic} />
         </section>
 
-        {/* COLUMNA DERECHA: DESTACADOS */}
+        {/* COLUMNA DERECHA: DESTACADOS Y OFERTAS */}
         <aside className="side-panel right-side">
           <h3>Destacados Premium</h3>
           <div className="premium-grid">
             {productos.slice(0, 3).map(p => (
-              <div key={p._id} className="premium-card">
-                <img src={p.imgs[0]} alt={p.title} />
+              <div key={p._id || p.id} className="premium-card">
+                <img src={p.imgs?.[0] || p.foto} alt={p.title || p.titulo} />
                 <div className="card-info">
-                  <h4>{p.title}</h4>
-                  <p>${p.price.toLocaleString()}</p>
+                  <h4>{p.title || p.titulo}</h4>
+                  <p>${(p.price || p.precio || 0).toLocaleString()}</p>
                 </div>
               </div>
+            ))}
+          </div>
+
+          <h3><FiZap /> Ofertas en Imágenes</h3>
+          <div className="premium-grid">
+            {productos
+              .filter(p => (p.price || p.precio || 0) < 90000)
+              .slice(0, 4)
+              .map(p => (
+                <div key={`oferta-${p._id || p.id}`} className="premium-card">
+                  <img src={p.imgs?.[0] || p.foto} alt={p.title || p.titulo} />
+                  <div className="card-info">
+                    <h4>{p.title || p.titulo}</h4>
+                    <p>${(p.price || p.precio || 0).toLocaleString()}</p>
+                  </div>
+                </div>
             ))}
           </div>
         </aside>
@@ -94,10 +171,19 @@ const App = () => {
       {mostrarModal && (
         <ModalVenderPro 
           coordenadas={coordsClic} 
+          usuario={usuario}
+          onAddProduct={handleNewProduct}
           onClose={() => setMostrarModal(false)} 
         />
       )}
-      {mostrarRegistro && <Registro onClose={() => setMostrarRegistro(false)} />}
+      {mostrarRegistro && (
+        <Registro 
+          onClose={() => setMostrarRegistro(false)} 
+          onRegister={handleRegistro} 
+          onLogin={handleLogin} 
+          usuario={usuario}
+        />
+      )}
     </div>
   );
 };

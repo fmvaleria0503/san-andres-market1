@@ -29,6 +29,15 @@ const crearIcono = (urlFoto) => {
   });
 };
 
+const ClickHandler = ({ onMapClick }) => {
+  useMapEvents({
+    click: (e) => {
+      if (onMapClick) onMapClick(e.latlng);
+    }
+  });
+  return null;
+};
+
 const MapaBarrio = ({ productos = [], onMapClick }) => {
   const itemsConCoords = productos.filter((p) => {
     const hasLocation = p?.location?.lat !== undefined && p?.location?.lng !== undefined;
@@ -44,6 +53,7 @@ const MapaBarrio = ({ productos = [], onMapClick }) => {
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       <ResizeMap /> 
+      <ClickHandler onMapClick={onMapClick} />
 
       {itemsConCoords.map((p) => {
         const lat = p?.location?.lat ?? p?.lat;
