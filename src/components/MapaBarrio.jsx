@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import React, { useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { FiMessageSquare } from 'react-icons/fi'; // Necesitas react-icons: npm install react-icons
@@ -38,7 +38,23 @@ const ClickHandler = ({ onMapClick }) => {
   return null;
 };
 
-const MapaBarrio = ({ productos = [], onMapClick }) => {
+const MapaBarrio = ({ productos = [], onMapClick, onCenterMap }) => {
+  const mapRef = useRef();
+
+  useEffect(() => {
+    if (onCenterMap) {
+      onCenterMap.current = (producto) => {
+        if (mapRef.current) {
+          const lat = producto?.location?.lat ?? producto?.lat;
+          const lng = producto?.location?.lng ?? producto?.lng;
+          if (lat && lng) {
+            mapRef.current.setView([lat, lng], 16);
+          }
+        }
+      };
+    }
+  }, [onCenterMap]);
+
   const itemsConCoords = productos.filter((p) => {
     const hasLocation = p?.location?.lat !== undefined && p?.location?.lng !== undefined;
     const hasLatLng = p?.lat !== undefined && p?.lng !== undefined;
@@ -50,6 +66,7 @@ const MapaBarrio = ({ productos = [], onMapClick }) => {
       center={[-34.57, -58.53]} 
       zoom={14} 
       style={{ height: '100%', width: '100%' }}
+      ref={mapRef}
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       <ResizeMap /> 
@@ -88,7 +105,7 @@ const MapaBarrio = ({ productos = [], onMapClick }) => {
                 </div>
 
                 {/* Botón WhatsApp */}
-                <button className="btn-whatsapp">
+                <button className="btn-whatsapp" onClick={() => window.open(`https://wa.me/${p.telefono || '5491123456789'}?text=Hola, me interesa tu producto: ${p.title}`, '_blank')}>
                   <FiMessageSquare /> WHATSAPP
                 </button>
               </div>

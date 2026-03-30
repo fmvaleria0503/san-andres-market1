@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import MapaBarrio from './components/MapaBarrio';
 import ModalVenderPro from './components/ModalVenderPro';
 import Registro from './components/Registro';
@@ -9,10 +9,12 @@ import './App.css';
 const App = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [usuario, setUsuario] = useState(null);
-  const [productos, setProductos] = useState([]);
   const [mostrarModal, setMostrarModal] = useState(false);
   const [mostrarRegistro, setMostrarRegistro] = useState(false);
   const [coordsClic, setCoordsClic] = useState(null);
+  const [vendedorSeleccionado, setVendedorSeleccionado] = useState(null);
+  const [mostrarModalVendedor, setMostrarModalVendedor] = useState(false);
+  const mapCenterRef = useRef();
 
   useEffect(() => {
     fetch('http://localhost:5000/api/productos?aprobado=true')
@@ -46,6 +48,17 @@ const App = () => {
   const handleNewProduct = (nuevoProducto) => {
     setProductos(prev => [nuevoProducto, ...prev]);
     setMostrarModal(false);
+  };
+
+  const abrirModalVendedor = (vendedor) => {
+    setVendedorSeleccionado(vendedor);
+    setMostrarModalVendedor(true);
+  };
+
+  const centrarMapaEnProducto = (producto) => {
+    if (mapCenterRef.current) {
+      mapCenterRef.current(producto);
+    }
   };
 
   const abrirModalConClic = (coordenadas) => {
@@ -108,13 +121,12 @@ const App = () => {
         
         {/* COLUMNA IZQUIERDA: VENDEDORES */}
         <aside className="side-panel left-side">
-          <h3>Vendedores Top ⭐</h3>
+          <h3>Mejores Vendedores ⭐</h3>
           <div className="sellers-list">
             {sellersConComentario.length > 0 ? sellersConComentario.map(v => (
-              <div key={v.nombre} className="seller-card">
+              <div key={v.nombre} className="seller-card" onClick={() => abrirModalVendedor(v)}>
                 <span className="seller-name">{v.nombre}</span>
                 <span className="seller-stars">{'★'.repeat(Math.max(1, Math.min(5, Math.round(v.estrellas))))}</span>
-                <span className="seller-comment">“{v.comentario}”</span>
               </div>
             )) : (
               <div className="seller-card">Cargando vendedores...</div>
@@ -124,7 +136,7 @@ const App = () => {
 
         {/* CENTRO: MAPA PROFESIONAL CON RE_CALCULO */}
         <section className="map-zone-wrapper">
-          <MapaBarrio productos={productos} onMapClick={abrirModalConClic} />
+          <MapaBarrio productos={productos} onMapClick={abrirModalConClic} onCenterMap={mapCenterRef} />
         </section>
 
         {/* COLUMNA DERECHA: DESTACADOS Y OFERTAS */}
@@ -132,7 +144,7 @@ const App = () => {
           <h3>Destacados Premium</h3>
           <div className="premium-grid">
             {productos.slice(0, 3).map(p => (
-              <div key={p._id || p.id} className="premium-card">
+              <div key={p._id || p.id} className="premium-card" onClick={() => centrarMapaEnProducto(p)}>
                 <img src={p.imgs?.[0] || p.foto} alt={p.title || p.titulo} />
                 <div className="card-info">
                   <h4>{p.title || p.titulo}</h4>
@@ -163,7 +175,12 @@ const App = () => {
       {/* FOOTER MARQUEE */}
       <footer className="footer-marquee">
         <div className="marquee-content">
-           🔥 HELADERIA BALLESTER: 2x1 en 1/4kg todos los jueves 🍦 • 🛠️ FERRETERIA MALAIPU: 15% OFF • 📦
+          {productos.filter(p => (p.price || p.precio || 0) < 50000).map(p => (
+            <div key={`marquee-${p._id || p.id}`} className="marquee-item">
+              <img src={p.imgs?.[0] || p.foto} alt={p.title || p.titulo} />
+              <span>{p.title || p.titulo} - ${(p.price || p.precio || 0).toLocaleString()}</span>
+            </div>
+          ))}
         </div>
       </footer>
 
@@ -183,6 +200,26 @@ const App = () => {
           onLogin={handleLogin} 
           usuario={usuario}
         />
+      )}
+      {mostrarModalVendedor && vendedorSeleccionado && (
+        <div className="registro-overlay" onClick={() => setMostrarModalVendedor(false)}>
+          <div className="registro-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Calificaciones de {vendedorSeleccionado.nombre}</h2>
+            <div className="calificaciones-list">
+              {[
+                { nombre: 'Juan Pérez', estrellas: 5, comentario: 'Excelente vendedor, muy confiable.' },
+                { nombre: 'María García', estrellas: 4, comentario: 'Buen producto, entrega rápida.' },
+                { nombre: 'Carlos López', estrellas: 5, comentario: 'Recomiendo totalmente.' }
+              ].map((calif, idx) => (
+                <div key={idx} className="calificacion-item">
+                  <strong>{calif.nombre}</strong>: {'★'.repeat(calif.estrellas)}
+                  <p>{calif.comentario}</p>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setMostrarModalVendedor(false)}>Cerrar</button>
+          </div>
+        </div>
       )}
     </div>
   );

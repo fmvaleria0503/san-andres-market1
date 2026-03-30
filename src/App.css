@@ -40,6 +40,15 @@ body, html, #root { height: 100%; width: 100%; margin: 0; padding: 0; font-famil
 .map-zone-wrapper { position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 25px rgba(0,0,0,0.1); }
 
 /* Footer Marquee */
-.footer-marquee { height: 50px; background: #000; color: white; display: flex; align-items: center; overflow: hidden; }
-.marquee-content { display: inline-block; white-space: nowrap; animation: moveLeft 20s linear infinite; }
+.footer-marquee { height: 60px; background: #000; color: white; display: flex; align-items: center; overflow: hidden; }
+.marquee-content { display: flex; gap: 40px; animation: moveLeft 30s linear infinite; }
+.marquee-item { display: flex; align-items: center; gap: 10px; }
+.marquee-item img { width: 40px; height: 40px; object-fit: cover; border-radius: 5px; }
+.marquee-item span { font-size: 14px; }
 @keyframes moveLeft { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
+/* Modal de Calificaciones */
+.calificaciones-list { max-height: 300px; overflow-y: auto; margin: 20px 0; }
+.calificacion-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+.calificacion-item strong { color: var(--orange-mp); }
+.calificacion-item p { margin: 5px 0; font-style: italic; }
