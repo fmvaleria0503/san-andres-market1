@@ -1,49 +1,94 @@
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import { useEffect } from "react";
-import productos from "../data/productos.json";
-import ProductCard from "./ProductCard";
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { FiMessageSquare } from 'react-icons/fi'; // Necesitas react-icons: npm install react-icons
+import './MapaBarrio.css';
 
-// Fix íconos Leaflet UNA SOLA VEZ
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
-
-const center = [-34.56521, -58.54448];
-
-function MapaBarrio() {
+// ESTO ARREGLA EL ERROR DE VISUALIZACIÓN
+function ResizeMap() {
+  const map = useMap();
   useEffect(() => {
-    // Forzar redimensionar mapa
-    window.dispatchEvent(new Event('resize'));
-  }, []);
+    setTimeout(() => { map.invalidateSize(); }, 500);
+  }, [map]);
+  return null;
+}
+
+// ÍCONO PERSONALIZADO CON LA FOTO DEL PRODUCTO
+const crearIcono = (urlFoto) => {
+  return new L.DivIcon({
+    html: `
+      <div class="mp-pin-wrapper">
+        <img src="${urlFoto}" alt="" />
+        <div class="mp-pin-tip"></div>
+      </div>
+    `,
+    className: 'custom-pin', // Quitamos el fondo blanco default
+    iconSize: [50, 50],
+    iconAnchor: [25, 50],
+  });
+};
+
+const MapaBarrio = ({ productos = [], onMapClick }) => {
+  const itemsConCoords = productos.filter((p) => {
+    const hasLocation = p?.location?.lat !== undefined && p?.location?.lng !== undefined;
+    const hasLatLng = p?.lat !== undefined && p?.lng !== undefined;
+    return hasLocation || hasLatLng;
+  });
 
   return (
-    <div style={{ height: "100%", width: "100%" }}>
-      <MapContainer
-        center={center}
-        zoom={15}
-        style={{ height: "100%", width: "100%" }}
-        zoomControl={true}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        />
+    <MapContainer 
+      center={[-34.57, -58.53]} 
+      zoom={14} 
+      style={{ height: '100%', width: '100%' }}
+    >
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <ResizeMap /> 
 
-        {productos.map((producto) => (
-          <Marker key={producto.id} position={[producto.lat, producto.lng]}>
-            <Popup maxWidth={320}>
-              <ProductCard producto={producto} />
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
-    </div>
+      {itemsConCoords.map((p) => {
+        const lat = p?.location?.lat ?? p?.lat;
+        const lng = p?.location?.lng ?? p?.lng;
+        return (
+          <Marker 
+            key={p._id || p.id} 
+            position={[lat, lng]}
+            icon={crearIcono(p.imgs?.[0])} // Usa la foto real
+          >
+          {/* EL POPUP PROFESIONAL ESTILO IMAGEN 2 */}
+          <Popup className="mp-popup-wrapper">
+            <div className="mp-popup-pro">
+              
+              <div className="mp-gallery">
+                <img src={p.imgs?.[0]} alt="" className="mp-popup-img" />
+                <div className="mp-dots">
+                   <span class="active"></span><span></span><span></span>
+                </div>
+              </div>
+
+              <div className="mp-info">
+                <h4>{p.title}</h4>
+                <p className="mp-price">${p.price.toLocaleString()}</p>
+                <div className="mp-vendedor">👤 {p.vendedor || 'Usuario MarketPin'}</div>
+                
+                {/* Botones principales */}
+                <div className="mp-actions">
+                  <button className="btn-buy">COMPRAR</button>
+                  <button className="btn-light">PERMUTAR</button>
+                  <button className="btn-orange">OFERTAR</button>
+                </div>
+
+                {/* Botón WhatsApp */}
+                <button className="btn-whatsapp">
+                  <FiMessageSquare /> WHATSAPP
+                </button>
+              </div>
+            </div>
+          </Popup>
+        </Marker>
+        );
+      })}
+    </MapContainer>
   );
-}
+};
 
 export default MapaBarrio;

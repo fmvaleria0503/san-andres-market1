@@ -1,17 +1,24 @@
-@import "tailwindcss";
+@import "react-toastify/dist/ReactToastify.css";
 
-/* Esto es para que el mapa ocupe el lugar correcto */
+/* Reset global */
 html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden; /* Evita scrolls dobles */
+  background-color: #fff;
 }
 
-/* Para que los locales de abajo se puedan scrollear sin ver la barra */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+/* Clases útiles para estilizar el mapa y los scrollbars */
+.map-pro .leaflet-container {
+  height: 100%;
+  width: 100%;
 }
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 10px;
 }

@@ -1,0 +1,60 @@
+/* src/components/MapaBarrio.css */
+
+/* EL PIN PERSONALIZADO REDONDO CON FOTO */
+.custom-pin { background: transparent; border: none; }
+.mp-pin-wrapper {
+  width: 50px; height: 50px;
+  background: white;
+  border-radius: 50%;
+  border: 3px solid #FF8C00;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  display: flex; justify-content: center; align-items: center;
+  position: relative;
+}
+.mp-pin-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+.mp-pin-tip {
+  position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+  width: 12px; height: 12px;
+  background: #FF8C00; border-radius: 50%;
+}
+
+/* EL POPUP PROFESIONAL */
+/* Quitamos los bordes default de Leaflet */
+.leaflet-popup-content-wrapper { background: transparent; border: none; padding: 0; box-shadow: none; }
+.leaflet-popup-tip-container { display: none; }
+
+.mp-popup-pro {
+  background: white;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  display: flex; flex-direction: column;
+}
+
+/* Galería */
+.mp-gallery { width: 100%; height: 170px; position: relative; }
+.mp-popup-img { width: 100%; height: 100%; object-fit: cover; }
+.mp-dots { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
+.mp-dots span { width: 6px; height: 6px; background: rgba(255,255,255,0.7); border-radius: 50%; }
+.mp-dots span.active { background: white; }
+
+/* Info y Botones */
+.mp-info { padding: 15px; text-align: center; }
+.mp-info h4 { font-size: 16px; margin: 0 0 5px; color: #333; font-weight: 600; }
+.mp-price { font-size: 24px; font-weight: bold; color: #FF8C00; margin: 0 0 10px; }
+.mp-vendedor { font-size: 12px; color: #888; margin-bottom: 15px; }
+
+.mp-actions { display: flex; gap: 5px; margin-bottom: 10px; }
+.mp-actions button { flex: 1; padding: 10px; border-radius: 8px; border: none; font-size: 11px; font-weight: bold; cursor: pointer; }
+.btn-buy { background: #0a1027; color: white; }
+.btn-light { background: #eee; color: #333; }
+.btn-orange { background: #FF8C00; color: white; }
+
+.btn-whatsapp {
+  width: 100%; padding: 12px;
+  background: #28a745; color: white;
+  border: none; border-radius: 8px;
+  font-weight: bold; font-size: 14px;
+  cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;
+}
