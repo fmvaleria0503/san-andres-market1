@@ -9,6 +9,7 @@ import './App.css';
 const App = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [usuario, setUsuario] = useState(null);
+  const [productos, setProductos] = useState([]);
   const [mostrarModal, setMostrarModal] = useState(false);
   const [mostrarRegistro, setMostrarRegistro] = useState(false);
   const [coordsClic, setCoordsClic] = useState(null);
