@@ -143,8 +143,8 @@ const App = () => {
         {/* COLUMNA DERECHA: DESTACADOS Y OFERTAS */}
         <aside className="side-panel right-side">
           <h3>Destacados Premium</h3>
-          <div className="premium-grid">
-            {productos.slice(0, 3).map(p => (
+          <div className="premium-grid scrollable">
+            {productos.slice(0, 10).map(p => (
               <div key={p._id || p.id} className="premium-card" onClick={() => centrarMapaEnProducto(p)}>
                 <img src={p.imgs?.[0] || p.foto} alt={p.title || p.titulo} />
                 <div className="card-info">
@@ -156,10 +156,10 @@ const App = () => {
           </div>
 
           <h3><FiZap /> Ofertas en Imágenes</h3>
-          <div className="premium-grid">
+          <div className="premium-grid scrollable">
             {productos
               .filter(p => (p.price || p.precio || 0) < 90000)
-              .slice(0, 4)
+              .slice(0, 10)
               .map(p => (
                 <div key={`oferta-${p._id || p.id}`} className="premium-card">
                   <img src={p.imgs?.[0] || p.foto} alt={p.title || p.titulo} />
@@ -177,7 +177,7 @@ const App = () => {
       <footer className="footer-marquee">
         <div className="marquee-content">
           {productos.filter(p => (p.price || p.precio || 0) < 50000).map(p => (
-            <div key={`marquee-${p._id || p.id}`} className="marquee-item">
+            <div key={`marquee-${p._id || p.id}`} className="marquee-item" onClick={() => centrarMapaEnProducto(p)}>
               <img src={p.imgs?.[0] || p.foto} alt={p.title || p.titulo} />
               <span>{p.title || p.titulo} - ${(p.price || p.precio || 0).toLocaleString()}</span>
             </div>

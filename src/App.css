@@ -36,15 +36,17 @@ body, html, #root { height: 100%; width: 100%; margin: 0; padding: 0; font-famil
 .premium-card h4 { font-size: 15px; margin: 10px; color: var(--dark-mp); }
 .premium-card p { font-size: 18px; font-weight: bold; color: var(--orange-mp); margin: 10px; }
 
+.premium-grid.scrollable { max-height: 400px; overflow-y: auto; }
+
 /* Zona de Mapa */
 .map-zone-wrapper { position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 25px rgba(0,0,0,0.1); }
 
 /* Footer Marquee */
-.footer-marquee { height: 60px; background: #000; color: white; display: flex; align-items: center; overflow: hidden; }
+.footer-marquee { height: 80px; background: #000; color: white; display: flex; align-items: center; overflow: hidden; }
 .marquee-content { display: flex; gap: 40px; animation: moveLeft 30s linear infinite; }
-.marquee-item { display: flex; align-items: center; gap: 10px; }
-.marquee-item img { width: 40px; height: 40px; object-fit: cover; border-radius: 5px; }
-.marquee-item span { font-size: 14px; }
+.marquee-item { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.marquee-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 5px; }
+.marquee-item span { font-size: 16px; }
 @keyframes moveLeft { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
 /* Modal de Calificaciones */
