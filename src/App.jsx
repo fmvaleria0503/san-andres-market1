@@ -15,7 +15,17 @@ const App = () => {
   const [coordsClic, setCoordsClic] = useState(null);
   const [vendedorSeleccionado, setVendedorSeleccionado] = useState(null);
   const [mostrarModalVendedor, setMostrarModalVendedor] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('Todas');
+  const [condicionSeleccionada, setCondicionSeleccionada] = useState('Todas');
   const mapCenterRef = useRef();
+
+  // Locales publicitarios
+  const localesPublicitarios = [
+    { id: 1, nombre: 'Heladería Ballester', lat: -34.57, lng: -58.53, imagen: 'https://i.ibb.co/JpXgm06/default-product.jpg' },
+    { id: 2, nombre: 'Ferretería Malaipu', lat: -34.572, lng: -58.535, imagen: 'https://i.ibb.co/JpXgm06/default-product.jpg' },
+    { id: 3, nombre: 'Almacén Central', lat: -34.575, lng: -58.54, imagen: 'https://i.ibb.co/JpXgm06/default-product.jpg' }
+  ];
 
   useEffect(() => {
     fetch('http://localhost:5000/api/productos?aprobado=true')
@@ -62,6 +72,12 @@ const App = () => {
     }
   };
 
+  const centrarMapaEnLocal = (local) => {
+    if (mapCenterRef.current) {
+      mapCenterRef.current({ lat: local.lat, lng: local.lng });
+    }
+  };
+
   const abrirModalConClic = (coordenadas) => {
     if (!usuario) {
       alert('Debés ingresar o registrarte para ofertar productos.');
@@ -71,18 +87,13 @@ const App = () => {
     setMostrarModal(true);
   };
 
-  const topSellers = Array.from(
-    new Map(
-      productos
-        .map(p => ({
-          nombre: p.vendedor?.nombre || 'Vendedor Anónimo',
-          estrellas: p.vendedor?.estrellas || 0,
-          productos: 1
-        }))
-        .sort((a, b) => b.estrellas - a.estrellas)
-        .map(item => [item.nombre, item])
-    ).values()
-  );
+  const productosFiltrados = productos.filter(p => {
+    const titulo = (p.title || p.titulo || '').toLowerCase();
+    const matchesSearch = titulo.includes(searchTerm.toLowerCase());
+    const matchesCategoria = categoriaSeleccionada === 'Todas' || (p.categoria || p.category) === categoriaSeleccionada;
+    const matchesCondicion = condicionSeleccionada === 'Todas' || (p.condicion || p.condition) === condicionSeleccionada;
+    return matchesSearch && matchesCategoria && matchesCondicion;
+  });
 
   const sellersConComentario = topSellers.slice(0, 3).map((s, idx) => ({
     ...s,
@@ -100,7 +111,12 @@ const App = () => {
         <img src={logo} alt="MarketPin" className="brand-logo" />
         <div className="search-pill">
           <FiSearch />
-          <input type="text" placeholder="¿Qué buscás en San Martín? (ej: mesa, lavarropas...)" />
+          <input 
+            type="text" 
+            placeholder="¿Qué buscás en San Martín? (ej: mesa, lavarropas...)" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
         <div className="user-access">
           {usuario ? (
@@ -116,6 +132,28 @@ const App = () => {
           <FiUser className="user-icon" />
         </div>
       </header>
+
+      {/* FILTROS */}
+      <div className="filters-bar">
+        <div className="category-buttons">
+          {['Todas', 'Ropa', 'Electrodomésticos', 'Servicios', 'Hogar', 'Alimentos'].map(cat => (
+            <button 
+              key={cat} 
+              className={categoriaSeleccionada === cat ? 'active' : ''} 
+              onClick={() => setCategoriaSeleccionada(cat)}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+        <div className="condition-filter">
+          <select value={condicionSeleccionada} onChange={(e) => setCondicionSeleccionada(e.target.value)}>
+            <option value="Todas">Todas</option>
+            <option value="Nuevo">Nuevo</option>
+            <option value="Usado">Usado</option>
+          </select>
+        </div>
+      </div>
 
       {/* CUERPO PRINCIPAL (DASHBOARD GRID) */}
       <main className="main-content-grid">
@@ -137,14 +175,14 @@ const App = () => {
 
         {/* CENTRO: MAPA PROFESIONAL CON RE_CALCULO */}
         <section className="map-zone-wrapper">
-          <MapaBarrio productos={productos} onMapClick={abrirModalConClic} onCenterMap={mapCenterRef} />
+          <MapaBarrio productos={productosFiltrados} locales={localesPublicitarios} onMapClick={abrirModalConClic} onCenterMap={mapCenterRef} />
         </section>
 
         {/* COLUMNA DERECHA: DESTACADOS Y OFERTAS */}
         <aside className="side-panel right-side">
           <h3>Destacados Premium</h3>
           <div className="premium-grid scrollable">
-            {productos.slice(0, 10).map(p => (
+            {productosFiltrados.slice(0, 10).map(p => (
               <div key={p._id || p.id} className="premium-card" onClick={() => centrarMapaEnProducto(p)}>
                 <img src={p.imgs?.[0] || p.foto} alt={p.title || p.titulo} />
                 <div className="card-info">
@@ -157,7 +195,7 @@ const App = () => {
 
           <h3><FiZap /> Ofertas en Imágenes</h3>
           <div className="premium-grid scrollable">
-            {productos
+            {productosFiltrados
               .filter(p => (p.price || p.precio || 0) < 90000)
               .slice(0, 10)
               .map(p => (
@@ -176,10 +214,10 @@ const App = () => {
       {/* FOOTER MARQUEE */}
       <footer className="footer-marquee">
         <div className="marquee-content">
-          {productos.filter(p => (p.price || p.precio || 0) < 50000).map(p => (
-            <div key={`marquee-${p._id || p.id}`} className="marquee-item" onClick={() => centrarMapaEnProducto(p)}>
-              <img src={p.imgs?.[0] || p.foto} alt={p.title || p.titulo} />
-              <span>{p.title || p.titulo} - ${(p.price || p.precio || 0).toLocaleString()}</span>
+          {localesPublicitarios.map(local => (
+            <div key={`marquee-${local.id}`} className="marquee-item" onClick={() => centrarMapaEnLocal(local)}>
+              <img src={local.imagen} alt={local.nombre} />
+              <span>{local.nombre} - ¡Visítanos!</span>
             </div>
           ))}
         </div>

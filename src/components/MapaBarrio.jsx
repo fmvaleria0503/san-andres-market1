@@ -38,7 +38,7 @@ const ClickHandler = ({ onMapClick }) => {
   return null;
 };
 
-const MapaBarrio = ({ productos = [], onMapClick, onCenterMap }) => {
+const MapaBarrio = ({ productos = [], locales = [], onMapClick, onCenterMap }) => {
   const mapRef = useRef();
 
   useEffect(() => {
@@ -114,6 +114,29 @@ const MapaBarrio = ({ productos = [], onMapClick, onCenterMap }) => {
         </Marker>
         );
       })}
+
+      {/* Marcadores para locales publicitarios */}
+      {locales.map((local) => (
+        <Marker 
+          key={`local-${local.id}`} 
+          position={[local.lat, local.lng]}
+          icon={crearIcono(local.imagen)} // Usa la imagen del local
+        >
+          <Popup className="mp-popup-wrapper">
+            <div className="mp-popup-pro">
+              <div className="mp-gallery">
+                <img src={local.imagen} alt="" className="mp-popup-img" />
+              </div>
+              <div className="mp-info">
+                <h4>{local.nombre}</h4>
+                <p className="mp-price">Local Publicitario</p>
+                <div className="mp-vendedor">🏪 Comercio Local</div>
+                <button className="btn-orange">VISITAR</button>
+              </div>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
     </MapContainer>
   );
 };

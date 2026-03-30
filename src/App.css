@@ -17,7 +17,12 @@ body, html, #root { height: 100%; width: 100%; margin: 0; padding: 0; font-famil
 .btn-registro { background: var(--dark-mp); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 .btn-registro:hover { background: #555; }
 .user-icon { color: var(--dark-mp); font-size: 20px; }
-
+/* Filtros */
+.filters-bar { background: #f8f9f8; padding: 10px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+.category-buttons { display: flex; gap: 10px; }
+.category-buttons button { background: white; border: 1px solid #ddd; padding: 8px 12px; border-radius: 20px; cursor: pointer; }
+.category-buttons button.active { background: var(--orange-mp); color: white; }
+.condition-filter select { padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
 /* Grid de Dashboard Pro */
 .main-content-grid { display: grid; grid-template-columns: 280px 1fr 280px; flex: 1; gap: 15px; padding: 15px; overflow: hidden; }
 
