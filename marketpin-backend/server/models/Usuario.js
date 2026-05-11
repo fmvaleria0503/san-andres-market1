@@ -35,36 +35,9 @@ const UsuarioSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  // Nuevos campos para vendedores
-  imagenPerfil: {
-    type: String,
-    default: null
-  },
-  whatsapp: {
-    type: String,
-    default: null
-  },
-  calificacion: {
-    type: Number,
-    default: 0,
-    min: 0,
-    max: 5
-  },
-  totalCalificaciones: {
-    type: Number,
-    default: 0
-  },
-  productosVendidos: {
-    type: Number,
-    default: 0
-  },
-  esPremium: {
+  premium: {
     type: Boolean,
     default: false
-  },
-  fechaPremium: {
-    type: Date,
-    default: null
   }
 });
 

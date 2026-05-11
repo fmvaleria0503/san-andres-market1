@@ -10,12 +10,17 @@ const GestionPublicidades = () => {
     texto: '',
     prioridad: 1,
     activa: true,
+    tipo: 'normal',
+    fechaExpiracion: '',
     costoPorClick: 0,
     costoTotal: 0,
+    zona: 'Don Torcuato',
+    imagenLocal: '',
     anunciante: {
       nombre: '',
       email: '',
-      telefono: ''
+      telefono: '',
+      whatsapp: ''
     }
   });
 
@@ -75,9 +80,13 @@ const GestionPublicidades = () => {
       texto: publicidad.texto,
       prioridad: publicidad.prioridad,
       activa: publicidad.activa,
+      tipo: publicidad.tipo || 'normal',
+      fechaExpiracion: publicidad.fechaExpiracion ? new Date(publicidad.fechaExpiracion).toISOString().slice(0, 10) : '',
       costoPorClick: publicidad.costoPorClick,
       costoTotal: publicidad.costoTotal,
-      anunciante: publicidad.anunciante || { nombre: '', email: '', telefono: '' }
+      zona: publicidad.zona || 'Don Torcuato',
+      imagenLocal: publicidad.imagenLocal || '',
+      anunciante: publicidad.anunciante || { nombre: '', email: '', telefono: '', whatsapp: '' }
     });
     setMostrarModal(true);
   };
@@ -118,12 +127,17 @@ const GestionPublicidades = () => {
       texto: '',
       prioridad: 1,
       activa: true,
+      tipo: 'normal',
+      fechaExpiracion: '',
       costoPorClick: 0,
       costoTotal: 0,
+      zona: 'Don Torcuato',
+      imagenLocal: '',
       anunciante: {
         nombre: '',
         email: '',
-        telefono: ''
+        telefono: '',
+        whatsapp: ''
       }
     });
   };
@@ -204,6 +218,14 @@ const GestionPublicidades = () => {
                 <strong>{pub.anunciante?.nombre || 'Sin nombre'}</strong>
                 {pub.anunciante?.email && <span>{pub.anunciante.email}</span>}
               </div>
+              <div className="publicidad-meta">
+                <span className={`tipo-badge ${pub.tipo === 'premium' ? 'premium' : 'normal'}`}>
+                  {pub.tipo === 'premium' ? 'Pago / Destacado' : 'Normal'}
+                </span>
+                {pub.fechaExpiracion && (
+                  <span className="expiration-text">Vence: {new Date(pub.fechaExpiracion).toLocaleDateString()}</span>
+                )}
+              </div>
             </div>
 
             <div className="card-stats">
@@ -258,6 +280,46 @@ const GestionPublicidades = () => {
                     type="checkbox"
                     checked={formData.activa}
                     onChange={(e) => setFormData({...formData, activa: e.target.checked})}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Tipo de publicidad</label>
+                  <select
+                    value={formData.tipo}
+                    onChange={(e) => setFormData({...formData, tipo: e.target.value})}
+                  >
+                    <option value="normal">Normal</option>
+                    <option value="premium">Premium</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Vence el</label>
+                  <input
+                    type="date"
+                    value={formData.fechaExpiracion}
+                    onChange={(e) => setFormData({...formData, fechaExpiracion: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Zona</label>
+                  <input
+                    type="text"
+                    value={formData.zona}
+                    onChange={(e) => setFormData({...formData, zona: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Imagen del local (URL)</label>
+                  <input
+                    type="text"
+                    value={formData.imagenLocal}
+                    onChange={(e) => setFormData({...formData, imagenLocal: e.target.value})}
                   />
                 </div>
               </div>
@@ -319,6 +381,17 @@ const GestionPublicidades = () => {
                       onChange={(e) => setFormData({
                         ...formData,
                         anunciante: {...formData.anunciante, telefono: e.target.value}
+                      })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>WhatsApp</label>
+                    <input
+                      type="tel"
+                      value={formData.anunciante.whatsapp}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        anunciante: {...formData.anunciante, whatsapp: e.target.value}
                       })}
                     />
                   </div>

@@ -13,7 +13,7 @@
   border-radius: 12px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
   padding: 1.4rem;
-  width: min(93vw, 450px);
+  width: min(93vw, 500px);
   max-height: 90vh;
   overflow-y: auto;
   animation: scaleIn 0.2s ease;
@@ -38,10 +38,67 @@
   padding: 10px;
 }
 
+.modal-mp-pro .form-row {
+  display: flex;
+  gap: 8px;
+}
+
+.modal-mp-pro .form-row .form-input {
+  flex: 1;
+}
+
+.modal-mp-pro textarea.form-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.modal-mp-pro .form-label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.modal-mp-pro .image-uploader-section {
+  margin: 16px 0;
+}
+
 .modal-mp-pro .modal-actions {
   display: flex;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 20px;
+}
+
+.modal-mp-pro .btn-light {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.modal-mp-pro .btn-light:hover {
+  background: #e5e7eb;
+}
+
+.modal-mp-pro .btn-orange {
+  background: #f97316;
+  color: white;
+  border: none;
+  padding: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.modal-mp-pro .btn-orange:hover:not(:disabled) {
+  background: #ea580c;
+}
+
+.modal-mp-pro .btn-orange:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .modal-mp-pro button { cursor: pointer; }

@@ -2,6 +2,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 // 2. INICIALIZACIÓN DE LA APP
@@ -9,9 +10,11 @@ const app = express();
 
 // 3. MIDDLEWARES
 // Permite que tu frontend (HTML/JS) acceda al backend desde otro puerto
-app.use(cors()); 
+app.use(cors());
 // Permite que el servidor entienda los datos JSON que enviamos desde el mapa
-app.use(express.json()); 
+app.use(express.json());
+// Servir archivos estáticos desde la carpeta uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); 
 
 // 4. CONEXIÓN A MONGODB
 // Usamos la URL local por defecto, o la que esté en el archivo .env
@@ -34,18 +37,23 @@ mongoose.connect(MONGO_URI)
 const productosRoutes = require('./routes/productos');
 const publicidadesRoutes = require('./routes/publicidades');
 const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
+const usuariosRoutes = require('./routes/usuarios');
 
 // Rutas de autenticación
-app.use('/api/auth', authRoutes);
-
-// Rutas de autenticación
-app.use('/api/auth', authRoutes);
+// app.use('/api/auth', authRoutes);
 
 // Todas las rutas de productos empezarán con /api/productos
-app.use('/api/productos', productosRoutes);
+// app.use('/api/productos', productosRoutes);
 
 // Todas las rutas de publicidades empezarán con /api/publicidades
-app.use('/api/publicidades', publicidadesRoutes);
+// app.use('/api/publicidades', publicidadesRoutes);
+
+// Todas las rutas de administración empezarán con /api/admin
+// app.use('/api/admin', adminRoutes);
+
+// Todas las rutas de usuarios empezarán con /api/usuarios
+// app.use('/api/usuarios', usuariosRoutes);
 
 // 6. RUTA DE PRUEBA (Para saber si el servidor está vivo)
 app.get('/', (req, res) => {

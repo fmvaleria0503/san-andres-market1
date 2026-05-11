@@ -10,6 +10,10 @@ const PublicidadSchema = new mongoose.Schema({
     type: String,  // URLs como "https://cloudinary.com/imagen.jpg"
     required: false
   }],
+  imagenLocal: {
+    type: String, // Imagen del local/comercio
+    default: null
+  },
   activa: {
     type: Boolean,
     default: true
@@ -19,6 +23,11 @@ const PublicidadSchema = new mongoose.Schema({
     default: 1,
     min: 1,
     max: 10
+  },
+  tipo: {
+    type: String,
+    enum: ['normal', 'premium'],
+    default: 'normal'
   },
   fechaExpiracion: {
     type: Date,
@@ -41,9 +50,21 @@ const PublicidadSchema = new mongoose.Schema({
     default: 0
   },
   anunciante: {
+    id: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario' },
     nombre: { type: String },
     email: { type: String },
-    telefono: { type: String }
+    telefono: { type: String },
+    whatsapp: { type: String },
+    imagenPerfil: { type: String }
+  },
+  productos: [{
+    nombre: String,
+    precio: Number,
+    descuento: Number
+  }],
+  zona: {
+    type: String,
+    default: 'Don Torcuato'
   }
 }, { 
   timestamps: true 

@@ -6,8 +6,21 @@ const { auth, adminAuth } = require('../middleware/auth');
 // GET - Obtener todas las publicidades activas (para mostrar en el frontend)
 router.get('/', async (req, res) => {
     try {
-        const publicidades = await Publicidad.find({ activa: true })
-            .sort({ prioridad: -1, fechaCreacion: -1 });
+        const now = new Date();
+        const filtro = {
+            activa: true,
+            $or: [
+                { fechaExpiracion: null },
+                { fechaExpiracion: { $gte: now } }
+            ]
+        };
+
+        if (req.query.zona) {
+            filtro.zona = req.query.zona;
+        }
+
+        const publicidades = await Publicidad.find(filtro)
+            .sort({ tipo: -1, prioridad: -1, fechaExpiracion: 1, createdAt: -1 });
         res.json(publicidades);
     } catch (err) {
         res.status(500).json({ mensaje: err.message });
