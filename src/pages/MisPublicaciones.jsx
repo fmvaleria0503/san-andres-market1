@@ -118,9 +118,14 @@ const MisPublicaciones = () => {
       return;
     }
 
+    const token = localStorage.getItem('marketpinUserToken');
+    if (!token) {
+      setError('No estás autenticado. Inicia sesión nuevamente antes de guardar.');
+      return;
+    }
+
     setSaving(true);
     setError('');
-    const token = localStorage.getItem('marketpinUserToken');
 
     try {
       const formData = new FormData();
@@ -140,13 +145,26 @@ const MisPublicaciones = () => {
 
       const response = await fetch(`http://localhost:5001/api/productos/${editProducto._id}`, {
         method: 'PUT',
-        headers: token ? { Authorization: `Bearer ${token}`, 'x-auth-token': token } : {},
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'x-auth-token': token
+        },
         body: formData
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        const text = await response.text();
+        console.error('Error parseando respuesta:', parseError, text);
+        setError(`Error inesperado del servidor (${response.status}). Intenta de nuevo.`);
+        return;
+      }
+
       if (!response.ok) {
-        setError(data.mensaje || 'No se pudo actualizar la publicación.');
+        console.error('Error response updating product:', response.status, data);
+        setError(data.mensaje || `Error ${response.status}: ${response.statusText}`);
         return;
       }
 
@@ -155,7 +173,7 @@ const MisPublicaciones = () => {
       closeEditModal();
     } catch (err) {
       console.error('Error guardando la publicación:', err);
-      setError('Error guardando la publicación. Intenta de nuevo.');
+      setError(err.message || 'Error guardando la publicación. Intenta de nuevo.');
     } finally {
       setSaving(false);
     }
