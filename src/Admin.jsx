@@ -8,10 +8,11 @@ import { FiSearch, FiZap, FiUser, FiSettings, FiTrendingUp, FiPackage, FiLogOut 
 import logo from './assets/logo.png';
 import './App.css';
 
-const App = () => {
+const Admin = () => {
   const [productos, setProductos] = useState([]);
   const [productosPendientes, setProductosPendientes] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
+  const [eventos, setEventos] = useState([]);
   const [mostrarModal, setMostrarModal] = useState(false);
   const [mostrarRegistro, setMostrarRegistro] = useState(false);
   const [coordsClic, setCoordsClic] = useState(null);
@@ -19,6 +20,13 @@ const App = () => {
   const [adminAutenticado, setAdminAutenticado] = useState(null);
   const [cargandoAuth, setCargandoAuth] = useState(true);
   const [cargandoUsuarios, setCargandoUsuarios] = useState(true);
+  const [filtroUsuarios, setFiltroUsuarios] = useState('');
+  const [config, setConfig] = useState({
+    permitirRegistro: true,
+    mostrarDestacados: true,
+    zonaPredeterminada: 'Norte',
+    maxPublicidades: 6
+  });
 
   useEffect(() => {
     verificarAutenticacion();
@@ -27,24 +35,39 @@ const App = () => {
   useEffect(() => {
     if (adminAutenticado) {
       // Cargar productos aprobados desde el backend
-      fetch("http://localhost:5000/api/productos?aprobado=true")
+      fetch("http://localhost:5001/api/productos?aprobado=true")
         .then(res => res.json())
         .then(data => setProductos(data))
         .catch(err => console.error("Error backend:", err));
 
-      fetch("http://localhost:5000/api/productos/pendientes")
+      const token = localStorage.getItem('adminToken');
+
+      fetch("http://localhost:5001/api/productos/pendientes", {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
         .then(res => res.json())
         .then(data => setProductosPendientes(data))
         .catch(err => console.error("Error cargando productos pendientes:", err));
 
-      const token = localStorage.getItem('adminToken');
-      fetch('http://localhost:5000/api/admin/usuarios', {
+      fetch('http://localhost:5001/api/admin/usuarios', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
         .then(data => setUsuarios(data))
         .catch(err => console.error('Error cargando usuarios:', err))
         .finally(() => setCargandoUsuarios(false));
+
+      const savedConfig = localStorage.getItem('marketpinConfig');
+      if (savedConfig) {
+        setConfig(JSON.parse(savedConfig));
+      }
+
+      fetch('http://localhost:5001/api/admin/eventos', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => setEventos(Array.isArray(data) ? data : []))
+        .catch(err => console.error('Error cargando eventos de admin:', err));
     }
   }, [adminAutenticado]);
 
@@ -55,7 +78,7 @@ const App = () => {
     if (token && usuario) {
       try {
         // Verificar token con el backend
-        const res = await fetch('http://localhost:5000/api/auth/verificar', {
+        const res = await fetch('http://localhost:5001/api/auth/verificar', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -87,10 +110,15 @@ const App = () => {
     setPestanaActiva('dashboard');
   };
 
+  const handleGuardarConfiguracion = () => {
+    localStorage.setItem('marketpinConfig', JSON.stringify(config));
+    alert('Configuración guardada correctamente');
+  };
+
   const handleToggleUsuario = async (usuarioId, activo) => {
     const token = localStorage.getItem('adminToken');
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/usuarios/${usuarioId}/activo`, {
+      const res = await fetch(`http://localhost:5001/api/admin/usuarios/${usuarioId}/activo`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -109,17 +137,38 @@ const App = () => {
   const handleSetUsuarioPremium = async (usuarioId) => {
     const token = localStorage.getItem('adminToken');
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/usuarios/${usuarioId}/premium`, {
+      const res = await fetch(`http://localhost:5001/api/admin/usuarios/${usuarioId}/premium`, {
         method: 'PUT',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        }
+        },
+        body: JSON.stringify({ premium: true })
       });
       if (res.ok) {
         setUsuarios(prev => prev.map(u => u._id === usuarioId ? { ...u, esPremium: true, fechaPremium: new Date().toISOString() } : u));
       }
     } catch (error) {
       console.error('Error actualizando premium:', error);
+    }
+  };
+
+  const handleEliminarProducto = async (productoId) => {
+    if (!window.confirm('Eliminar este pin eliminará la publicación permanentemente.')) return;
+    const token = localStorage.getItem('adminToken');
+    try {
+      const res = await fetch(`http://localhost:5001/api/admin/productos/${productoId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        setProductosPendientes(prev => prev.filter(p => p._id !== productoId));
+        setProductos(prev => prev.filter(p => p._id !== productoId));
+      }
+    } catch (error) {
+      console.error('Error eliminando producto:', error);
     }
   };
 
@@ -274,20 +323,40 @@ const App = () => {
                 )}
                 <div className="pending-actions">
                   <button className="btn-approve" onClick={() => {
-                    fetch(`http://localhost:5000/api/admin/productos/${producto._id}/aprobar`, {
+                    const token = localStorage.getItem('adminToken');
+                    fetch(`http://localhost:5001/api/admin/productos/${producto._id}/aprobar`, {
                       method: 'PUT',
-                      headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-                    }).then(() => setProductosPendientes(prev => prev.filter(p => p._id !== producto._id)));
+                      headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                      .then(res => res.json())
+                      .then(data => {
+                        if (data.producto) {
+                          setProductosPendientes(prev => prev.filter(p => p._id !== producto._id));
+                          setProductos(prev => [data.producto, ...prev]);
+                        } else {
+                          alert('Error: ' + (data.mensaje || 'Error desconocido'));
+                        }
+                      })
+                      .catch(err => {
+                        console.error('Error aprobando producto:', err);
+                        alert('Error de conexión al aprobar producto');
+                      });
                   }}>
                     Aprobar
                   </button>
                   <button className="btn-reject" onClick={() => {
-                    fetch(`http://localhost:5000/api/admin/productos/${producto._id}/rechazar`, {
+                    const token = localStorage.getItem('adminToken');
+                    fetch(`http://localhost:5001/api/admin/productos/${producto._id}/rechazar`, {
                       method: 'PUT',
-                      headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-                    }).then(() => setProductosPendientes(prev => prev.filter(p => p._id !== producto._id)));
+                      headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                      .then(() => setProductosPendientes(prev => prev.filter(p => p._id !== producto._id)))
+                      .catch(err => console.error('Error rechazando producto:', err));
                   }}>
                     Rechazar
+                  </button>
+                  <button className="btn-delete" onClick={() => handleEliminarProducto(producto._id)}>
+                    Eliminar pin
                   </button>
                 </div>
               </div>
@@ -295,56 +364,160 @@ const App = () => {
               <p>No hay productos pendientes por revisar.</p>
             )}
           </div>
+
+          <div className="admin-section admin-notifications">
+            <h3>Notificaciones recientes</h3>
+            {eventos.length > 0 ? (
+              <ul className="event-list">
+                {eventos.slice(0, 6).map(evento => (
+                  <li key={evento._id} className="event-item">
+                    <span className="event-time">{new Date(evento.fecha).toLocaleString()}</span>
+                    <p>{evento.mensaje}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No hay notificaciones recientes.</p>
+            )}
+          </div>
         </div>
       ) : pestanaActiva === 'publicidades' ? (
         <GestionPublicidades />
       ) : pestanaActiva === 'usuarios' ? (
         <div className="admin-section">
-          <h2>Gestión de Usuarios</h2>
-          <p>Administra los usuarios registrados, activa/desactiva cuentas y marca premium.</p>
+          <div className="section-header">
+            <div>
+              <h2>Gestión de Usuarios</h2>
+              <p>Administra y organiza los usuarios registrados.</p>
+            </div>
+            <div className="search-filter">
+              <input
+                type="text"
+                placeholder="Buscar por nombre o email"
+                value={filtroUsuarios}
+                onChange={(e) => setFiltroUsuarios(e.target.value)}
+              />
+            </div>
+          </div>
+
           {cargandoUsuarios ? (
             <p>Cargando usuarios...</p>
           ) : (
-            <div className="users-table">
-              <div className="users-table-header">
-                <span>Nombre</span>
-                <span>Email</span>
-                <span>Estado</span>
-                <span>Premium</span>
-                <span>Acciones</span>
-              </div>
-              {usuarios.map(usuario => (
-                <div key={usuario._id} className="users-table-row">
-                  <span>{usuario.nombre}</span>
-                  <span>{usuario.email}</span>
-                  <span>{usuario.activo ? 'Activo' : 'Inactivo'}</span>
-                  <span>{usuario.esPremium ? 'Sí' : 'No'}</span>
-                  <span className="users-actions">
-                    <button
-                      className="btn-small"
-                      onClick={() => handleToggleUsuario(usuario._id, usuario.activo)}
-                    >
+            <div className="users-grid">
+              {usuarios.filter(usuario => {
+                const term = filtroUsuarios.toLowerCase();
+                return (
+                  usuario.nombre?.toLowerCase().includes(term) ||
+                  usuario.email?.toLowerCase().includes(term)
+                );
+              }).map(usuario => (
+                <div key={usuario._id} className="user-card">
+                  <div className="user-card-header">
+                    <div>
+                      <h3>{usuario.nombre}</h3>
+                      <span className="user-email">{usuario.email}</span>
+                    </div>
+                    <span className={`user-status ${usuario.activo ? 'active' : 'inactive'}`}>
+                      {usuario.activo ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </div>
+                  <div className="user-card-body">
+                    <p><strong>Premium:</strong> {usuario.esPremium ? 'Sí' : 'No'}</p>
+                    <p><strong>Teléfono:</strong> {usuario.telefono || 'No disponible'}</p>
+                    <p><strong>Región:</strong> {usuario.zona || 'N/D'}</p>
+                  </div>
+                  <div className="user-card-actions">
+                    <button className="btn-small" onClick={() => handleToggleUsuario(usuario._id, usuario.activo)}>
                       {usuario.activo ? 'Desactivar' : 'Activar'}
                     </button>
                     {!usuario.esPremium && (
-                      <button
-                        className="btn-small btn-yellow"
-                        onClick={() => handleSetUsuarioPremium(usuario._id)}
-                      >
-                        Premium
+                      <button className="btn-small btn-yellow" onClick={() => handleSetUsuarioPremium(usuario._id)}>
+                        Marcar Premium
                       </button>
                     )}
-                  </span>
+                  </div>
                 </div>
               ))}
+              {usuarios.filter(usuario => {
+                const term = filtroUsuarios.toLowerCase();
+                return (
+                  usuario.nombre?.toLowerCase().includes(term) ||
+                  usuario.email?.toLowerCase().includes(term)
+                );
+              }).length === 0 && (
+                <p className="empty-state">No se encontraron usuarios con ese filtro.</p>
+              )}
             </div>
           )}
         </div>
       ) : pestanaActiva === 'configuracion' ? (
         <div className="admin-section">
-          <h2>Configuración del Sistema</h2>
-          <p>Configuraciones generales de MarketPin.</p>
-          {/* TODO: Implementar configuración */}
+          <div className="section-header">
+            <div>
+              <h2>Configuración del Sistema</h2>
+              <p>Define el comportamiento y la experiencia de MarketPin.</p>
+            </div>
+          </div>
+
+          <div className="config-grid">
+            <div className="config-card">
+              <h4>Registro de usuarios</h4>
+              <p>Permitir que nuevos usuarios se registren en la plataforma.</p>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={config.permitirRegistro}
+                  onChange={(e) => setConfig(prev => ({ ...prev, permitirRegistro: e.target.checked }))}
+                />
+                <span className="slider" />
+              </label>
+            </div>
+
+            <div className="config-card">
+              <h4>Mostrar destacados</h4>
+              <p>Activar la sección de productos destacados en el dashboard.</p>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={config.mostrarDestacados}
+                  onChange={(e) => setConfig(prev => ({ ...prev, mostrarDestacados: e.target.checked }))}
+                />
+                <span className="slider" />
+              </label>
+            </div>
+
+            <div className="config-card">
+              <h4>Zona predeterminada</h4>
+              <p>Selecciona la zona por defecto para nuevas búsquedas y anuncios.</p>
+              <select
+                value={config.zonaPredeterminada}
+                onChange={(e) => setConfig(prev => ({ ...prev, zonaPredeterminada: e.target.value }))}
+              >
+                <option value="Norte">Norte</option>
+                <option value="Sur">Sur</option>
+                <option value="Oeste">Oeste</option>
+                <option value="CABA">CABA</option>
+              </select>
+            </div>
+
+            <div className="config-card">
+              <h4>Límite de publicidades</h4>
+              <p>Cuántas publicidades se muestran en la vista principal.</p>
+              <input
+                type="number"
+                min="1"
+                max="20"
+                value={config.maxPublicidades}
+                onChange={(e) => setConfig(prev => ({ ...prev, maxPublicidades: Number(e.target.value) }))}
+              />
+            </div>
+          </div>
+
+          <div className="config-actions">
+            <button className="btn-primary" onClick={handleGuardarConfiguracion}>
+              Guardar configuración
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -360,4 +533,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default Admin;

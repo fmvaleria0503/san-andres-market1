@@ -38,8 +38,23 @@ const ClickHandler = ({ onMapClick }) => {
   return null;
 };
 
-const MapaBarrio = ({ productos = [], locales = [], onMapClick, onCenterMap }) => {
+const MapaBarrio = ({ productos = [], locales = [], onMapClick, onProductSelect, onCenterMap, zona = 'Todas' }) => {
   const mapRef = useRef();
+
+  const centroPorZona = {
+    Todas: { center: [-34.57, -58.53], zoom: 13 },
+    Norte: { center: [-34.556, -58.513], zoom: 14 },
+    Sur: { center: [-34.593, -58.544], zoom: 14 },
+    Oeste: { center: [-34.569, -58.575], zoom: 14 },
+    CABA: { center: [-34.608, -58.377], zoom: 12 }
+  };
+
+  useEffect(() => {
+    if (mapRef.current) {
+      const view = centroPorZona[zona] || centroPorZona.Todas;
+      mapRef.current.setView(view.center, view.zoom);
+    }
+  }, [zona]);
 
   useEffect(() => {
     if (onCenterMap) {
@@ -75,37 +90,50 @@ const MapaBarrio = ({ productos = [], locales = [], onMapClick, onCenterMap }) =
       {itemsConCoords.map((p) => {
         const lat = p?.location?.lat ?? p?.lat;
         const lng = p?.location?.lng ?? p?.lng;
+        const fotoPin = p.imgs?.[0] || p.foto || 'https://i.ibb.co/JpXgm06/default-product.jpg';
+        const precio = p.price ?? p.precio ?? 0;
+        const vendedorNombre = p.vendedor?.nombre || 'Vendedor MarketPin';
+        const estrellas = Math.round(p.vendedor?.estrellas || 0);
+        const whatsAppNumber = (p.vendedor?.whatsapp || p.whatsapp || '5491123456789').replace(/\D/g, '');
+        const whatsappLink = `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent('Hola, me interesa tu producto: ' + (p.title || p.titulo || ''))}`;
         return (
           <Marker 
             key={p._id || p.id} 
             position={[lat, lng]}
-            icon={crearIcono(p.imgs?.[0])} // Usa la foto real
+            icon={crearIcono(fotoPin)}
+            eventHandlers={{
+              click: () => {
+                if (onProductSelect) onProductSelect(p);
+              }
+            }}
           >
           {/* EL POPUP PROFESIONAL ESTILO IMAGEN 2 */}
           <Popup className="mp-popup-wrapper">
             <div className="mp-popup-pro">
               
               <div className="mp-gallery">
-                <img src={p.imgs?.[0]} alt="" className="mp-popup-img" />
+                <img src={fotoPin} alt={p.title || p.titulo} className="mp-popup-img" />
                 <div className="mp-dots">
-                   <span class="active"></span><span></span><span></span>
+                  <span className="active"></span><span></span><span></span>
                 </div>
               </div>
 
               <div className="mp-info">
-                <h4>{p.title}</h4>
-                <p className="mp-price">${p.price.toLocaleString()}</p>
-                <div className="mp-vendedor">👤 {p.vendedor || 'Usuario MarketPin'}</div>
-                
-                {/* Botones principales */}
+                <h4>{p.title || p.titulo || 'Producto'}</h4>
+                <p className="mp-price">${precio.toLocaleString()}</p>
+                <div className="mp-vendedor">👤 {vendedorNombre}</div>
+                <div className="mp-vendedor">{'★'.repeat(estrellas)}{'☆'.repeat(5 - estrellas)}</div>
+
                 <div className="mp-actions">
-                  <button className="btn-buy">COMPRAR</button>
-                  <button className="btn-light">PERMUTAR</button>
-                  <button className="btn-orange">OFERTAR</button>
+                  <button className="btn-buy" onClick={() => window.open(whatsappLink, '_blank')}>COMPRAR</button>
+                  <button className="btn-light" onClick={() => window.open(`${whatsappLink}%20(Quiero%20permutar)`, '_blank')}>PERMUTAR</button>
+                  <button className="btn-orange" onClick={() => window.open(`${whatsappLink}%20(Quiero%20ofertar)`, '_blank')}>OFERTAR</button>
                 </div>
 
-                {/* Botón WhatsApp */}
-                <button className="btn-whatsapp" onClick={() => window.open(`https://wa.me/${p.telefono || '5491123456789'}?text=Hola, me interesa tu producto: ${p.title}`, '_blank')}>
+                <button className="btn-more-details" onClick={() => onProductSelect?.(p)}>
+                  Ver más detalles
+                </button>
+                <button className="btn-whatsapp" onClick={() => window.open(whatsappLink, '_blank')}>
                   <FiMessageSquare /> WHATSAPP
                 </button>
               </div>

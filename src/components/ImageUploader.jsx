@@ -1,40 +1,82 @@
 import React, { useState, useRef } from 'react';
 
+const readFileAsDataURL = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = reject;
+  reader.readAsDataURL(file);
+});
+
+const resizeImage = async (file) => {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const maxDimension = 1200;
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+
+    if (scale === 1) {
+      return file;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+    const blob = await new Promise((resolve) => {
+      canvas.toBlob((result) => resolve(result), 'image/jpeg', 0.75);
+    });
+
+    if (!blob) return file;
+    return new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), { type: 'image/jpeg' });
+  } catch (error) {
+    console.error('Error resizing image:', error);
+    return file;
+  }
+};
+
 const ImageUploader = ({ onImagesSelected, maxImages = 5, existingImages = [] }) => {
   const [selectedImages, setSelectedImages] = useState(existingImages);
   const [previews, setPreviews] = useState(existingImages);
+  const [warning, setWarning] = useState('');
   const fileInputRef = useRef(null);
 
-  const handleFileSelect = (event) => {
+  const handleFileSelect = async (event) => {
     const files = Array.from(event.target.files);
-
-    // Limitar el número de imágenes
     const availableSlots = maxImages - selectedImages.length;
     const filesToProcess = files.slice(0, availableSlots);
 
-    const newImages = [];
-    const newPreviews = [];
-
-    filesToProcess.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        newImages.push(file);
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          newPreviews.push(e.target.result);
-          if (newPreviews.length === filesToProcess.length) {
-            setPreviews(prev => [...prev, ...newPreviews]);
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    setSelectedImages(prev => [...prev, ...newImages]);
-
-    // Llamar al callback con las nuevas imágenes
-    if (onImagesSelected) {
-      onImagesSelected([...selectedImages, ...newImages]);
+    if (filesToProcess.length === 0) {
+      setWarning(`Ya alcanzaste el límite de ${maxImages} imágenes.`);
+      return;
     }
+
+    setWarning('');
+    const processed = [];
+
+    for (const file of filesToProcess) {
+      if (!file.type.startsWith('image/')) {
+        setWarning('Solo se permiten archivos de imagen.');
+        continue;
+      }
+
+      const resizedFile = file.size > 2.5 * 1024 * 1024 ? await resizeImage(file) : file;
+      const preview = await readFileAsDataURL(resizedFile);
+      processed.push({ file: resizedFile, preview });
+    }
+
+    if (processed.length === 0) {
+      event.target.value = null;
+      return;
+    }
+
+    const newSelectedImages = [...selectedImages, ...processed.map(item => item.file)];
+    const newPreviews = [...previews, ...processed.map(item => item.preview)];
+
+    setSelectedImages(newSelectedImages);
+    setPreviews(newPreviews);
+    onImagesSelected?.(newSelectedImages);
+    event.target.value = null;
   };
 
   const removeImage = (index) => {
@@ -43,10 +85,9 @@ const ImageUploader = ({ onImagesSelected, maxImages = 5, existingImages = [] })
 
     setSelectedImages(newSelectedImages);
     setPreviews(newPreviews);
+    setWarning('');
 
-    if (onImagesSelected) {
-      onImagesSelected(newSelectedImages);
-    }
+    onImagesSelected?.(newSelectedImages);
   };
 
   const openGallery = () => {
@@ -102,9 +143,9 @@ const ImageUploader = ({ onImagesSelected, maxImages = 5, existingImages = [] })
         className="hidden"
       />
 
-      {/* Instrucciones */}
+      {warning && <p className="text-xs text-red-500 mb-2">{warning}</p>}
       <p className="text-xs text-gray-500">
-        Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB por imagen.
+        Formatos permitidos: JPG, PNG, GIF. Las imágenes grandes se comprimen automáticamente a un tamaño manejable.
       </p>
     </div>
   );

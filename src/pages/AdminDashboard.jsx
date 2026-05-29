@@ -14,7 +14,7 @@ const AdminDashboard = () => {
     useEffect(() => {
         const fetchDashboard = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/admin/dashboard', {
+                const response = await fetch('http://localhost:5001/api/admin/dashboard', {
                     headers: {
                         'x-auth-token': localStorage.getItem('token')
                     }
@@ -31,7 +31,7 @@ const AdminDashboard = () => {
 
     const handleAprobarProducto = async (id) => {
         try {
-            await fetch(`http://localhost:5000/api/admin/productos/${id}/aprobar`, {
+            await fetch(`http://localhost:5001/api/admin/productos/${id}/aprobar`, {
                 method: 'PUT',
                 headers: {
                     'x-auth-token': localStorage.getItem('token')
@@ -46,7 +46,7 @@ const AdminDashboard = () => {
 
     const handleRechazarProducto = async (id) => {
         try {
-            await fetch(`http://localhost:5000/api/admin/productos/${id}/rechazar`, {
+            await fetch(`http://localhost:5001/api/admin/productos/${id}/rechazar`, {
                 method: 'PUT',
                 headers: {
                     'x-auth-token': localStorage.getItem('token')

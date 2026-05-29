@@ -33,7 +33,9 @@ const ModalVenderPro = ({ coordenadas, onClose, onAddProduct, usuario }) => {
     formData.append('price', precio);
     formData.append('descripcion', descripcion);
     formData.append('categoria', categoria);
-    formData.append('vendedorId', usuario?._id || '');
+    formData.append('vendedorNombre', usuario?.nombre || 'Usuario MarketPin');
+    formData.append('vendedorEmail', usuario?.email || '');
+    formData.append('vendedorId', usuario?.id || usuario?._id || '');
     formData.append('whatsapp', whatsapp);
     formData.append('location', JSON.stringify({ lat: coordenadas.lat, lng: coordenadas.lng }));
 
@@ -43,7 +45,7 @@ const ModalVenderPro = ({ coordenadas, onClose, onAddProduct, usuario }) => {
     });
 
     try {
-      const response = await fetch('http://localhost:5000/api/productos/vender', {
+      const response = await fetch('http://localhost:5001/api/productos/vender', {
         method: 'POST',
         body: formData
       });

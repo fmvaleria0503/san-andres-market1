@@ -6,12 +6,11 @@ const Registro = ({ onClose, onRegister, onLogin, usuario }) => {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('user');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (mode === 'register') {
-      onRegister({ nombre, email, password, role });
+      onRegister({ nombre, email, password });
     } else {
       onLogin({ email, password });
     }
@@ -45,12 +44,6 @@ const Registro = ({ onClose, onRegister, onLogin, usuario }) => {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          {mode === 'register' && (
-            <select value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="user">Usuario</option>
-              <option value="admin">Administrador</option>
-            </select>
-          )}
           <button type="submit">{mode === 'register' ? 'Crear cuenta' : 'Ingresar'}</button>
         </form>
         <div className="registro-footer">
