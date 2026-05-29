@@ -35,21 +35,21 @@ const Admin = () => {
   useEffect(() => {
     if (adminAutenticado) {
       // Cargar productos aprobados desde el backend
-      fetch("http://localhost:5001/api/productos?aprobado=true")
+      fetch("http://localhost:5000/api/productos?aprobado=true")
         .then(res => res.json())
         .then(data => setProductos(data))
         .catch(err => console.error("Error backend:", err));
 
       const token = localStorage.getItem('adminToken');
 
-      fetch("http://localhost:5001/api/productos/pendientes", {
+      fetch("http://localhost:5000/api/productos/pendientes", {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
         .then(data => setProductosPendientes(data))
         .catch(err => console.error("Error cargando productos pendientes:", err));
 
-      fetch('http://localhost:5001/api/admin/usuarios', {
+      fetch('http://localhost:5000/api/admin/usuarios', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
@@ -62,7 +62,7 @@ const Admin = () => {
         setConfig(JSON.parse(savedConfig));
       }
 
-      fetch('http://localhost:5001/api/admin/eventos', {
+      fetch('http://localhost:5000/api/admin/eventos', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
@@ -78,7 +78,7 @@ const Admin = () => {
     if (token && usuario) {
       try {
         // Verificar token con el backend
-        const res = await fetch('http://localhost:5001/api/auth/verificar', {
+                const res = await fetch('http://localhost:5000/api/auth/verificar', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -118,7 +118,7 @@ const Admin = () => {
   const handleToggleUsuario = async (usuarioId, activo) => {
     const token = localStorage.getItem('adminToken');
     try {
-      const res = await fetch(`http://localhost:5001/api/admin/usuarios/${usuarioId}/activo`, {
+      const res = await fetch(`http://localhost:5000/api/admin/usuarios/${usuarioId}/activo`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -137,7 +137,7 @@ const Admin = () => {
   const handleSetUsuarioPremium = async (usuarioId) => {
     const token = localStorage.getItem('adminToken');
     try {
-      const res = await fetch(`http://localhost:5001/api/admin/usuarios/${usuarioId}/premium`, {
+      const res = await fetch(`http://localhost:5000/api/admin/usuarios/${usuarioId}/premium`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -157,7 +157,7 @@ const Admin = () => {
     if (!window.confirm('Eliminar este pin eliminará la publicación permanentemente.')) return;
     const token = localStorage.getItem('adminToken');
     try {
-      const res = await fetch(`http://localhost:5001/api/admin/productos/${productoId}`, {
+      const res = await fetch(`http://localhost:5000/api/admin/productos/${productoId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

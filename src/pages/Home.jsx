@@ -14,7 +14,7 @@ function Home() {
       setLoading(true);
       try {
         const query = zonaSeleccionada !== 'Todas' ? `?zona=${encodeURIComponent(zonaSeleccionada)}` : '';
-        const res = await fetch(`http://localhost:5001/api/publicidades${query}`);
+        const res = await fetch(`http://localhost:5000/api/publicidades${query}`);
         const data = await res.json();
         setPublicidades(Array.isArray(data) ? data : []);
       } catch (err) {

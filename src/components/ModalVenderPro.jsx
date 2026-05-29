@@ -45,7 +45,7 @@ const ModalVenderPro = ({ coordenadas, onClose, onAddProduct, usuario }) => {
     });
 
     try {
-      const response = await fetch('http://localhost:5001/api/productos/vender', {
+      const response = await fetch('http://localhost:5000/api/productos/vender', {
         method: 'POST',
         body: formData
       });

@@ -28,9 +28,9 @@ const AdminLogin = ({ onLoginSuccess }) => {
       if (res.ok) {
         // Guardar token en localStorage
         localStorage.setItem('adminToken', data.token);
-        localStorage.setItem('adminUser', JSON.stringify(data.usuario));
+        localStorage.setItem('adminUser', JSON.stringify(data.user || data.usuario));
 
-        onLoginSuccess(data.usuario);
+        onLoginSuccess(data.user || data.usuario);
       } else {
         setError(data.mensaje || 'Error en el login');
       }
@@ -123,6 +123,7 @@ const AdminLogin = ({ onLoginSuccess }) => {
           <div className="security-notice">
             🔒 Esta sesión es monitoreada y registrada
           </div>
+          <p className="helper-text">Usa <strong>admin@marketpin.com</strong> / <strong>admin123</strong> si no configuraste variables de entorno.</p>
         </div>
       </div>
     </div>

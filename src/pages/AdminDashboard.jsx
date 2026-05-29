@@ -16,7 +16,7 @@ const AdminDashboard = () => {
         const fetchDashboard = async () => {
             try {
                         const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
-                        const response = await fetch('http://localhost:5001/api/admin/dashboard', {
+                        const response = await fetch('http://localhost:5000/api/admin/dashboard', {
                             headers: {
                                 Authorization: `Bearer ${token}`
                             }
@@ -38,7 +38,7 @@ const AdminDashboard = () => {
 
     const handleAprobarProducto = async (id) => {
         try {
-            await fetch(`http://localhost:5001/api/productos/${id}/aprobar`, {
+            await fetch(`http://localhost:5000/api/productos/${id}/aprobar`, {
                 method: 'PUT',
                 headers: getAuthHeaders()
             });
@@ -51,7 +51,7 @@ const AdminDashboard = () => {
     const handleEliminarProducto = async (id) => {
         if (!window.confirm('¿Confirma eliminar esta publicación?')) return;
         try {
-            await fetch(`http://localhost:5001/api/productos/${id}`, {
+            await fetch(`http://localhost:5000/api/productos/${id}`, {
                 method: 'DELETE',
                 headers: getAuthHeaders()
             });
@@ -63,7 +63,7 @@ const AdminDashboard = () => {
 
     const handleVerProducto = async (id) => {
         try {
-            const res = await fetch(`http://localhost:5001/api/productos/${id}`, { headers: getAuthHeaders() });
+            const res = await fetch(`http://localhost:5000/api/productos/${id}`, { headers: getAuthHeaders() });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({ mensaje: 'Error al obtener producto' }));
                 alert(err.mensaje || 'No se pudo obtener el producto');

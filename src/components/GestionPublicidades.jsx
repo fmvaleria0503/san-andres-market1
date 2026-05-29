@@ -40,7 +40,7 @@ const GestionPublicidades = () => {
 
   const cargarPublicidades = async () => {
     try {
-      const res = await fetch('http://localhost:5001/api/publicidades/admin', {
+      const res = await fetch('http://localhost:5000/api/publicidades/admin', {
         headers: getAuthHeaders()
       });
       const data = await res.json();
@@ -76,7 +76,7 @@ const GestionPublicidades = () => {
     e.preventDefault();
 
     try {
-      const url = editando ? `http://localhost:5001/api/publicidades/${editando._1d}` : 'http://localhost:5001/api/publicidades';
+      const url = editando ? `http://localhost:5000/api/publicidades/${editando._1d}` : 'http://localhost:5000/api/publicidades';
       const method = editando ? 'PUT' : 'POST';
       const body = buildFormData();
 

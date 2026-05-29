@@ -35,7 +35,7 @@ const MisPublicaciones = () => {
     const userId = currentUser._id || currentUser.id || '';
     const query = currentUser.email ? `?email=${encodeURIComponent(currentUser.email)}` : `?vendedorId=${encodeURIComponent(userId)}`;
 
-    fetch(`http://localhost:5001/api/productos/mis${query}`)
+    fetch(`http://localhost:5000/api/productos/mis${query}`)
       .then((res) => res.json())
       .then((data) => setProductos(Array.isArray(data) ? data : []))
       .catch((err) => {
@@ -152,7 +152,7 @@ const MisPublicaciones = () => {
         formData.append('imagenes', file);
       });
 
-      const response = await fetch(`http://localhost:5001/api/productos/${editProducto._id}`, {
+      const response = await fetch(`http://localhost:5000/api/productos/${editProducto._id}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,

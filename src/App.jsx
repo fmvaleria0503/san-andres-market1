@@ -51,7 +51,7 @@ const App = () => {
 
   useEffect(() => {
     // Cargar productos
-    fetch('http://localhost:5001/api/productos?aprobado=true')
+    fetch('http://localhost:5000/api/productos?aprobado=true')
       .then(res => res.json())
       .then(data => {
         console.log('Productos cargados:', data);
@@ -65,7 +65,7 @@ const App = () => {
 
   useEffect(() => {
     const query = zonaSeleccionada && zonaSeleccionada !== 'Todas' ? `?zona=${encodeURIComponent(zonaSeleccionada)}` : '';
-    fetch(`http://localhost:5001/api/publicidades${query}`)
+    fetch(`http://localhost:5000/api/publicidades${query}`)
       .then(res => res.json())
       .then(data => {
         console.log('Publicidades cargadas:', data);
@@ -79,7 +79,7 @@ const App = () => {
 
   const handleRegistro = async ({ nombre, email, password }) => {
     try {
-      const response = await fetch('http://localhost:5001/api/auth/register', {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre, email, password })
@@ -106,7 +106,7 @@ const App = () => {
 
   const handleLogin = async ({ email, password }) => {
     try {
-      const response = await fetch('http://localhost:5001/api/auth/login', {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
