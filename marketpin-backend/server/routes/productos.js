@@ -111,7 +111,35 @@ router.put('/:id/aprobar', auth, adminAuth, async (req, res) => {
     }
 });
 
-// RUTA PARA EDITAR UNA PUBLICACIÓN PROPIA
+// RUTA PARA OBTENER UN PRODUCTO (muestra no aprobados sólo a admin o propietario)
+router.get('/:id', async (req, res) => {
+    try {
+        const producto = await Producto.findById(req.params.id);
+        if (!producto) return res.status(404).json({ mensaje: 'Producto no encontrado' });
+
+        if (producto.aprobado) return res.json(producto);
+
+        // Si no está aprobado, intentar verificar token para chequear permisos
+        const token = req.header('Authorization')?.replace('Bearer ', '') || req.header('x-auth-token');
+        if (!token) return res.status(403).json({ mensaje: 'Acceso restringido a esta publicación' });
+
+        try {
+            const jwt = require('jsonwebtoken');
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const isOwner = producto.vendedorId === (decoded.id || decoded._id) || producto.vendedorEmail === decoded.email;
+            if (decoded.role === 'admin' || isOwner) {
+                return res.json(producto);
+            }
+            return res.status(403).json({ mensaje: 'Acceso restringido a esta publicación' });
+        } catch (e) {
+            return res.status(401).json({ mensaje: 'Sesión inválida' });
+        }
+    } catch (err) {
+        res.status(500).json({ mensaje: err.message });
+    }
+});
+
+// RUTA PARA EDITAR UNA PUBLICACIÓN PROPIA O POR ADMIN
 router.put('/:id', auth, upload.array('imagenes', 5), async (req, res) => {
     try {
         const producto = await Producto.findById(req.params.id);
@@ -123,7 +151,8 @@ router.put('/:id', auth, upload.array('imagenes', 5), async (req, res) => {
         const ownerId = usuario?.id || usuario?._id;
         const ownerEmail = usuario?.email;
         const isOwner = producto.vendedorId === ownerId || producto.vendedorEmail === ownerEmail;
-        if (!isOwner) {
+        const isAdmin = usuario?.role === 'admin';
+        if (!isOwner && !isAdmin) {
             return res.status(403).json({ mensaje: 'No autorizado para editar esta publicación' });
         }
 
@@ -189,4 +218,16 @@ router.get('/mis', async (req, res) => {
     }
 });
 
+// RUTA PARA ELIMINAR UNA PUBLICACIÓN (ADMIN)
+router.delete('/:id', auth, adminAuth, async (req, res) => {
+    try {
+        const producto = await Producto.findById(req.params.id);
+        if (!producto) return res.status(404).json({ mensaje: 'Producto no encontrado' });
+
+        await Producto.findByIdAndDelete(req.params.id);
+        res.json({ mensaje: 'Producto eliminado' });
+    } catch (err) {
+        res.status(500).json({ mensaje: err.message });
+    }
+});
 module.exports = router;
