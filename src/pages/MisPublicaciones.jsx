@@ -76,37 +76,29 @@ const MisPublicaciones = () => {
   };
 
   const handleFileSelect = (event) => {
-            const response = await fetch(`http://localhost:5001/api/productos/${editProducto._id}`, {
+    const files = event.target.files ? Array.from(event.target.files) : [];
     if (files.length === 0) return;
 
+    // límite total 5 imágenes (existentes + nuevas)
     const maxSlots = 5 - (editData.imagenesExistentes.length + newImageFiles.length);
+    if (maxSlots <= 0) {
+      setError('Ya alcanzaste el límite de 5 imágenes por publicación.');
+      event.target.value = null;
+      return;
+    }
+
     const allowedFiles = files.slice(0, maxSlots);
     if (allowedFiles.length === 0) {
-      setError('Ya alcanzaste el límite de 5 imágenes por publicación.');
+      setError('No se agregaron imágenes nuevas.');
+      event.target.value = null;
       return;
-            // Leer siempre como texto primero para evitar 'body stream already read'
-            const textoRespuesta = await response.text();
-            let data = {};
-            if (textoRespuesta) {
-              try {
-                data = JSON.parse(textoRespuesta);
-              } catch (errParse) {
-                console.warn('Respuesta del servidor no es JSON:', textoRespuesta);
-                data = { mensaje: textoRespuesta };
-              }
-            }
-
-            if (!response.ok) {
-              console.error('Error al actualizar la publicación:', response.status, data);
-              setError((data && data.mensaje) ? data.mensaje : `Error ${response.status}: ${response.statusText}`);
-              return;
-            }
     }
 
     const newPreviews = allowedFiles.map((file) => URL.createObjectURL(file));
     setNewImageFiles((prev) => [...prev, ...allowedFiles]);
     setNewImagePreviews((prev) => [...prev, ...newPreviews]);
     setError('');
+    // permitir volver a seleccionar los mismos archivos si se desea
     event.target.value = null;
   };
 
@@ -169,19 +161,21 @@ const MisPublicaciones = () => {
         body: formData
       });
 
-      let data;
-      try {
-        data = await response.json();
-      } catch (parseError) {
-        const text = await response.text();
-        console.error('Error parseando respuesta:', parseError, text);
-        setError(`Error inesperado del servidor (${response.status}). Intenta de nuevo.`);
-        return;
+      // Leer siempre como texto para evitar 'body stream already read'
+      const textoRespuesta = await response.text();
+      let data = {};
+      if (textoRespuesta) {
+        try {
+          data = JSON.parse(textoRespuesta);
+        } catch (errParse) {
+          console.warn('Respuesta del servidor no es JSON:', textoRespuesta);
+          data = { mensaje: textoRespuesta };
+        }
       }
 
       if (!response.ok) {
         console.error('Error response updating product:', response.status, data);
-        setError(data.mensaje || `Error ${response.status}: ${response.statusText}`);
+        setError((data && data.mensaje) ? data.mensaje : `Error ${response.status}: ${response.statusText}`);
         return;
       }
 
