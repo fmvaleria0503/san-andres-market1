@@ -113,6 +113,11 @@ const MisPublicaciones = () => {
       return;
     }
 
+    if (editData.imagenesExistentes.length + newImageFiles.length === 0) {
+      setError('Debes conservar o subir al menos una imagen.');
+      return;
+    }
+
     setSaving(true);
     setError('');
     const token = localStorage.getItem('marketpinUserToken');
@@ -135,7 +140,7 @@ const MisPublicaciones = () => {
 
       const response = await fetch(`http://localhost:5001/api/productos/${editProducto._id}`, {
         method: 'PUT',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: token ? { Authorization: `Bearer ${token}`, 'x-auth-token': token } : {},
         body: formData
       });
 
