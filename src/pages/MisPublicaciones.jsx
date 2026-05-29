@@ -17,6 +17,8 @@ const MisPublicaciones = () => {
   const [usuario, setUsuario] = useState(null);
   const [editProducto, setEditProducto] = useState(null);
   const [editData, setEditData] = useState(initialEditData);
+  const [newImageFiles, setNewImageFiles] = useState([]);
+  const [newImagePreviews, setNewImagePreviews] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -54,6 +56,8 @@ const MisPublicaciones = () => {
       imagenesExistentes: producto.imgs || [],
       location: producto.location || null
     });
+    setNewImageFiles([]);
+    setNewImagePreviews([]);
     setError('');
     setMessage('');
   };
@@ -69,6 +73,37 @@ const MisPublicaciones = () => {
   const handleEditChange = (event) => {
     const { name, value } = event.target;
     setEditData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileSelect = (event) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    const maxSlots = 5 - (editData.imagenesExistentes.length + newImageFiles.length);
+    const allowedFiles = files.slice(0, maxSlots);
+    if (allowedFiles.length === 0) {
+      setError('Ya alcanzaste el límite de 5 imágenes por publicación.');
+      return;
+    }
+
+    const newPreviews = allowedFiles.map((file) => URL.createObjectURL(file));
+    setNewImageFiles((prev) => [...prev, ...allowedFiles]);
+    setNewImagePreviews((prev) => [...prev, ...newPreviews]);
+    setError('');
+    event.target.value = null;
+  };
+
+  const handleRemoveExistingImage = (index) => {
+    setEditData((prev) => ({
+      ...prev,
+      imagenesExistentes: prev.imagenesExistentes.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleRemoveNewImage = (index) => {
+    URL.revokeObjectURL(newImagePreviews[index]);
+    setNewImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleGuardarEdicion = async (event) => {
@@ -93,6 +128,10 @@ const MisPublicaciones = () => {
       if (editData.location) {
         formData.append('location', JSON.stringify(editData.location));
       }
+
+      newImageFiles.forEach((file) => {
+        formData.append('imagenes', file);
+      });
 
       const response = await fetch(`http://localhost:5001/api/productos/${editProducto._id}`, {
         method: 'PUT',
@@ -231,14 +270,81 @@ const MisPublicaciones = () => {
                 </label>
                 <div style={{ marginBottom: '16px', color: '#444' }}>
                   <strong>Imágenes actuales:</strong>
-                  <div className="pending-images" style={{ marginTop: '10px' }}>
+                  <div className="pending-images" style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                     {editData.imagenesExistentes.length > 0 ? (
                       editData.imagenesExistentes.map((img, idx) => (
-                        <img key={idx} src={img} alt={`Imagen ${idx + 1}`} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '12px', marginRight: '10px' }} />
+                        <div key={idx} style={{ position: 'relative', width: '80px', height: '80px' }}>
+                          <img
+                            src={img}
+                            alt={`Imagen ${idx + 1}`}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveExistingImage(idx)}
+                            style={{
+                              position: 'absolute',
+                              top: '-6px',
+                              right: '-6px',
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              border: 'none',
+                              background: '#ff3b30',
+                              color: '#fff',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
                       ))
                     ) : (
                       <span>No hay imágenes guardadas.</span>
                     )}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '16px', color: '#444' }}>
+                  <strong>Agregar nuevas imágenes</strong>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileSelect}
+                    style={{ display: 'block', marginTop: '10px' }}
+                  />
+                  <p style={{ marginTop: '8px', fontSize: '13px', color: '#666' }}>
+                    Puedes subir hasta {5 - editData.imagenesExistentes.length - newImageFiles.length} imágenes más.
+                  </p>
+                  <div className="pending-images" style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                    {newImagePreviews.map((preview, idx) => (
+                      <div key={idx} style={{ position: 'relative', width: '80px', height: '80px' }}>
+                        <img
+                          src={preview}
+                          alt={`Nueva imagen ${idx + 1}`}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveNewImage(idx)}
+                          style={{
+                            position: 'absolute',
+                            top: '-6px',
+                            right: '-6px',
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            border: 'none',
+                            background: '#ff3b30',
+                            color: '#fff',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
