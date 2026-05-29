@@ -93,6 +93,9 @@ const App = () => {
 
       setUsuario(data.user);
       localStorage.setItem('marketpinUsuario', JSON.stringify(data.user));
+      if (data.token) {
+        localStorage.setItem('marketpinUserToken', data.token);
+      }
       setMostrarRegistro(false);
       alert('Usuario creado con éxito.');
     } catch (error) {
@@ -119,9 +122,13 @@ const App = () => {
       localStorage.setItem('marketpinUsuario', JSON.stringify(data.user));
       if (data.token && data.user.role === 'admin') {
         localStorage.setItem('adminToken', data.token);
+        localStorage.removeItem('marketpinUserToken');
         navigate('/admin');
       } else {
         localStorage.removeItem('adminToken');
+        if (data.token) {
+          localStorage.setItem('marketpinUserToken', data.token);
+        }
       }
 
       setMostrarRegistro(false);
@@ -269,7 +276,10 @@ const App = () => {
               <Link to="/mis-publicaciones" className="btn-registro">
                 Mis publicaciones
               </Link>
-              <button className="btn-logout" onClick={() => setUsuario(null)}>SALIR</button>
+              <button className="btn-logout" onClick={() => {
+                localStorage.removeItem('marketpinUserToken');
+                setUsuario(null);
+              }}>SALIR</button>
             </>
           ) : (
             <button className="btn-registro" onClick={() => setMostrarRegistro(true)}>

@@ -112,18 +112,22 @@ router.put('/:id/aprobar', auth, adminAuth, async (req, res) => {
 });
 
 // RUTA PARA EDITAR UNA PUBLICACIÓN PROPIA
-router.put('/:id', upload.array('imagenes', 5), async (req, res) => {
+router.put('/:id', auth, upload.array('imagenes', 5), async (req, res) => {
     try {
         const producto = await Producto.findById(req.params.id);
         if (!producto) {
             return res.status(404).json({ mensaje: 'Producto no encontrado' });
         }
 
-        const { title, price, descripcion, categoria, whatsapp, location, ownerEmail, ownerId, imagenesExistentes } = req.body;
-        const isOwner = (ownerEmail && ownerEmail === producto.vendedorEmail) || (ownerId && ownerId === producto.vendedorId);
+        const usuario = req.usuario;
+        const ownerId = usuario?.id || usuario?._id;
+        const ownerEmail = usuario?.email;
+        const isOwner = producto.vendedorId === ownerId || producto.vendedorEmail === ownerEmail;
         if (!isOwner) {
             return res.status(403).json({ mensaje: 'No autorizado para editar esta publicación' });
         }
+
+        const { title, price, descripcion, categoria, whatsapp, location, imagenesExistentes } = req.body;
 
         producto.title = title || producto.title;
         producto.price = price !== undefined ? parseFloat(price) || 0 : producto.price;
