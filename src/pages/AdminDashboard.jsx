@@ -10,15 +10,17 @@ const AdminDashboard = () => {
     });
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
+    const [productoDetalle, setProductoDetalle] = useState(null);
 
     useEffect(() => {
         const fetchDashboard = async () => {
             try {
-                const response = await fetch('http://localhost:5001/api/admin/dashboard', {
-                    headers: {
-                        'x-auth-token': localStorage.getItem('token')
-                    }
-                });
+                        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+                        const response = await fetch('http://localhost:5001/api/admin/dashboard', {
+                            headers: {
+                                Authorization: `Bearer ${token}`
+                            }
+                        });
                 const result = await response.json();
                 setData(result);
                 setLoading(false);
@@ -29,32 +31,50 @@ const AdminDashboard = () => {
         fetchDashboard();
     }, []);
 
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        return { Authorization: `Bearer ${token}` };
+    };
+
     const handleAprobarProducto = async (id) => {
         try {
-            await fetch(`http://localhost:5001/api/admin/productos/${id}/aprobar`, {
+            await fetch(`http://localhost:5001/api/productos/${id}/aprobar`, {
                 method: 'PUT',
-                headers: {
-                    'x-auth-token': localStorage.getItem('token')
-                }
+                headers: getAuthHeaders()
             });
-            // Recargar datos
             window.location.reload();
         } catch (error) {
             console.error('Error:', error);
         }
     };
 
-    const handleRechazarProducto = async (id) => {
+    const handleEliminarProducto = async (id) => {
+        if (!window.confirm('¿Confirma eliminar esta publicación?')) return;
         try {
-            await fetch(`http://localhost:5001/api/admin/productos/${id}/rechazar`, {
-                method: 'PUT',
-                headers: {
-                    'x-auth-token': localStorage.getItem('token')
-                }
+            await fetch(`http://localhost:5001/api/productos/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
             });
             window.location.reload();
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error eliminando producto:', error);
+        }
+    };
+
+    const handleVerProducto = async (id) => {
+        try {
+            const res = await fetch(`http://localhost:5001/api/productos/${id}`, { headers: getAuthHeaders() });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({ mensaje: 'Error al obtener producto' }));
+                alert(err.mensaje || 'No se pudo obtener el producto');
+                return;
+            }
+            const producto = await res.json();
+            // Mostrar detalles simples en modal/alerta
+            setProductoDetalle(producto);
+        } catch (error) {
+            console.error('Error al ver producto:', error);
+            alert('Error al cargar el producto');
         }
     };
 
@@ -184,18 +204,26 @@ const AdminDashboard = () => {
                                         <p className="text-sm text-gray-500">Vendedor: {producto.vendedor?.nombre}</p>
                                     </div>
                                     <div className="flex space-x-2">
-                                        <button 
-                                            onClick={() => handleAprobarProducto(producto._id)}
-                                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                                        >
-                                            ✅ Aprobar
-                                        </button>
-                                        <button 
-                                            onClick={() => handleRechazarProducto(producto._id)}
-                                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                                        >
-                                            ❌ Rechazar
-                                        </button>
+                                                        <div className="flex space-x-2">
+                                                            <button 
+                                                                onClick={() => handleVerProducto(producto._id)}
+                                                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                                            >
+                                                                👁️ Ver
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleAprobarProducto(producto._id)}
+                                                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                                                            >
+                                                                ✅ Aprobar
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleEliminarProducto(producto._id)}
+                                                                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                                            >
+                                                                🗑️ Eliminar
+                                                            </button>
+                                                        </div>
                                     </div>
                                 </div>
                                 {producto.imgs && producto.imgs.length > 0 && (
@@ -208,6 +236,29 @@ const AdminDashboard = () => {
                                 )}
                             </div>
                         )) || <p className="text-gray-500">No hay productos pendientes</p>}
+                    </div>
+                </div>
+            )}
+
+            {/* Modal detalle producto */}
+            {productoDetalle && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg max-w-2xl w-full">
+                        <h3 className="text-xl font-bold mb-2">{productoDetalle.title}</h3>
+                        <p className="text-gray-600 mb-2">Precio: ${productoDetalle.price}</p>
+                        <p className="mb-2">{productoDetalle.descripcion}</p>
+                        <div className="flex gap-2 mb-4">
+                            <button className="bg-green-500 text-white px-4 py-1 rounded" onClick={() => { handleAprobarProducto(productoDetalle._id); setProductoDetalle(null); }}>Aprobar</button>
+                            <button className="bg-red-500 text-white px-4 py-1 rounded" onClick={() => { handleEliminarProducto(productoDetalle._id); setProductoDetalle(null); }}>Eliminar</button>
+                            <button className="bg-gray-300 px-4 py-1 rounded" onClick={() => setProductoDetalle(null)}>Cerrar</button>
+                        </div>
+                        {productoDetalle.imgs && (
+                            <div className="grid grid-cols-3 gap-2">
+                                {productoDetalle.imgs.map((img, i) => (
+                                    <img key={i} src={img} alt={`Img ${i}`} className="w-full h-32 object-cover rounded" />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
