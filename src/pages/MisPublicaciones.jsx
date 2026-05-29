@@ -76,7 +76,7 @@ const MisPublicaciones = () => {
   };
 
   const handleFileSelect = (event) => {
-    const files = Array.from(event.target.files || []);
+            const response = await fetch(`http://localhost:5001/api/productos/${editProducto._id}`, {
     if (files.length === 0) return;
 
     const maxSlots = 5 - (editData.imagenesExistentes.length + newImageFiles.length);
@@ -84,6 +84,23 @@ const MisPublicaciones = () => {
     if (allowedFiles.length === 0) {
       setError('Ya alcanzaste el límite de 5 imágenes por publicación.');
       return;
+            // Leer siempre como texto primero para evitar 'body stream already read'
+            const textoRespuesta = await response.text();
+            let data = {};
+            if (textoRespuesta) {
+              try {
+                data = JSON.parse(textoRespuesta);
+              } catch (errParse) {
+                console.warn('Respuesta del servidor no es JSON:', textoRespuesta);
+                data = { mensaje: textoRespuesta };
+              }
+            }
+
+            if (!response.ok) {
+              console.error('Error al actualizar la publicación:', response.status, data);
+              setError((data && data.mensaje) ? data.mensaje : `Error ${response.status}: ${response.statusText}`);
+              return;
+            }
     }
 
     const newPreviews = allowedFiles.map((file) => URL.createObjectURL(file));
